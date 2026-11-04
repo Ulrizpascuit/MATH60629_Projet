@@ -1,0 +1,6 @@
+"Currency","Selected_Model","Mean_Features","Min_Features","Max_Features"
+"EURUSD","Ridge",15,15,15
+"GBPUSD","Lasso",1.7,0,6
+"CADUSD","Lasso",2.6,0,14
+"CHFUSD","Linear",15,15,15
+"JPYUSD","Stepwise",2,1,2

@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# LaTeX: clone Overleaf separee (son propre depot git)
+latex/
