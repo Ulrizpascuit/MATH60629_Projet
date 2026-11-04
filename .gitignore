@@ -5,3 +5,7 @@
 
 # LaTeX: clone Overleaf separee (son propre depot git)
 latex/
+
+# Python
+__pycache__/
+.venv/

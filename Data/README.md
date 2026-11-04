@@ -7,23 +7,24 @@ editor_options:
 # Données
 
 Toutes les séries commencent le 2004-01-01. L'échantillon utilisé par
-les modèles s'arrête le 2026-08-27 (fixé dans `Code/build_features.R`).
+les modèles s'arrête le 2026-08-27 (fixé dans `Code/build_features.py`).
 
 ## Organisation du dossier
 
 | Dossier | Contenu | Créé par |
 |----|----|----|
 | `Raw/` | Fichiers bruts téléchargés à la main (taux CAD, CHF, JPY) | À la main, voir plus bas |
-| `Processed/` | Séries hebdomadaires (jeudi) : prix, rendements, volatilité réalisée, taux, financement | `run_data.R` |
-| `Features/` | Features de chaque devise | `run_data.R` |
-| `Models/` | Prévisions des modèles | `run_strategy.R` |
+| `Processed/` | Séries hebdomadaires (jeudi) : prix, rendements, volatilité réalisée, taux, financement | `run_data.py` |
+| `Features/` | Features de chaque devise | `run_data.py` |
+| `Models/` | Prévisions des modèles | `run_strategy.py` |
 
-## Données récupérées du web par `run_data.R`
+## Données récupérées du web
 
-Aucune étape manuelle : `Code/data_processing.R` les télécharge à chaque
-exécution. Une connexion internet est nécessaire.
+Ces séries ont été téléchargées une fois (avec les fonctions R de la
+colonne de droite) et enregistrées dans `Raw/`. Le code Python les relit
+sans les retélécharger : aucune connexion internet n'est nécessaire.
 
-| Donnée | Source | Identifiants | Fonction R |
+| Donnée | Source | Identifiants | Téléchargée avec (R) |
 |----|----|----|----|
 | Taux de change (prix quotidiens) | Yahoo Finance | `EURUSD=X`, `GBPUSD=X`, `CADUSD=X`, `CHFUSD=X`, `JPYUSD=X` | `quantmod::getSymbols(src = "yahoo")` |
 | Or, S&P 500, pétrole | Yahoo Finance | `GC=F`, `^GSPC`, `CL=F` | `quantmod::getSymbols(src = "yahoo")` |
@@ -58,9 +59,9 @@ Ces trois fichiers ne peuvent pas être téléchargés par le code : ils ont
 
 ## Traitement
 
-`Code/data_processing.R` ramène chaque série à une observation par
+`Code/data_processing.py` ramène chaque série à une observation par
 semaine : pour chaque jeudi, la dernière valeur connue ce jeudi ou
 avant, si elle date de 5 jours au plus (fonction `to_thursday`, dans
-`Function/functions.R`). `Code/build_features.R` construit ensuite les
+`Function/functions.py`). `Code/build_features.py` construit ensuite les
 features (écarts de taux avec les États-Unis, rendements de l'or, du S&P
 500 et du pétrole, indicateurs techniques).
