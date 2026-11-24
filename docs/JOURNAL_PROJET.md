@@ -979,18 +979,25 @@ qui n'utilise pas le test, mène à la même conclusion que l'étape 1.
 |---|---|---|---|---|
 | A0 Naïf | 0,15 | [−0,77 ; 1,02] | 65 % | 0,19 |
 | **Chaîne d'origine** | | | | |
-| A1 + prévision MIXT ($\hat r$ seul) | 0,54 | [−0,43 ; 1,51] | 87 % | 0,49 |
-| A2 + volatilité GARCH ($\hat r/\hat\sigma$) | 0,45 | [−0,41 ; 1,36] | 83 % | 0,41 |
+| A1 + prévision MIXT ($\hat r$ seul) | 0,54 | [−0,43 ; 1,51] | 87 % | 0,50 |
+| A2 + volatilité GARCH ($\hat r/\hat\sigma$) | 0,45 | [−0,41 ; 1,36] | 83 % | 0,42 |
 | A3 + méta-classifieur | **0,88** | **[0,09 ; 1,83]** | 97 % | 0,77 |
 | A3 placebo (même nombre de jambes) | 0,48 en moyenne | [−0,19 ; 1,14] | — | — |
 | **Chaîne mise à jour (exploratoire)** | | | | |
-| A1 + moyenne simple ($\hat r$ seul) | 0,58 | [−0,34 ; 1,57] | 91 % | 0,52 |
-| A2 + volatilité HAR | 0,52 | [−0,37 ; 1,51] | 88 % | 0,47 |
-| A3 + méta-classifieur | 0,74 | [−0,08 ; 1,58] | 96 % | 0,66 |
+| A1 + moyenne simple ($\hat r$ seul) | 0,58 | [−0,34 ; 1,57] | 91 % | 0,53 |
+| A2 + volatilité HAR | 0,52 | [−0,37 ; 1,51] | 88 % | 0,48 |
+| A3 + méta-classifieur | 0,74 | [−0,08 ; 1,58] | 96 % | 0,67 |
 | A3 placebo (même nombre de jambes) | 0,72 en moyenne | [0,17 ; 1,28] | — | — |
 
-*DSR : probabilité que le vrai Sharpe dépasse celui qu'on attendrait du meilleur de N = 27 essais faits
-au hasard (Sharpe de référence de 0,55 par an) ; on parle de signal établi au-delà de 0,95.*
+*DSR : probabilité que le vrai Sharpe dépasse celui qu'on attendrait du meilleur de N = 29 essais faits
+au hasard (Sharpe de référence de 0,544 par an) ; on parle de signal établi au-delà de 0,95. N compte
+toutes les stratégies dont le Sharpe de test a été calculé dans le projet, y compris les deux stratégies
+de l'étape 5 (LSTM et Ridge réestimée toutes les 52 semaines), ajoutées après coup selon la règle fixée
+d'avance. Calculé d'abord avec N = 27, avant l'étape 5 : Sharpe de référence de 0,551 par an, DSR de
+0,77 pour A3 d'origine (inchangé à deux décimales) et de 0,49 / 0,41 / 0,52 / 0,47 / 0,66 pour les
+autres variantes. Le Sharpe de référence baisse légèrement en passant à 29, parce que les deux nouveaux
+essais ont des Sharpe proches de la moyenne et réduisent la dispersion entre essais (liste complète :
+`essais_pour_dsr.csv`).*
 
 **Ce que chaque bloc apporte.**
 - **Bloc 1, la prévision ML (A0 → A1) :** le Sharpe passe de 0,15 à 0,54 (origine) ou 0,58 (mise à
@@ -1031,8 +1038,8 @@ en 2025. Aucune variante n'est positive chaque année.
 **Comparaison avec la littérature.**
 - Avec 260 semaines, l'intervalle de confiance d'un Sharpe annualisé fait environ ±0,9. Il faut un
   Sharpe très élevé, ou une période bien plus longue, pour distinguer une stratégie du hasard. C'est le
-  point central de Bailey et López de Prado (2014) : après N = 27 essais, le meilleur Sharpe qu'on
-  attendrait du seul hasard est déjà de 0,55 par an, et aucune variante n'atteint un DSR de 0,95.
+  point central de Bailey et López de Prado (2014) : après N = 29 essais, le meilleur Sharpe qu'on
+  attendrait du seul hasard est déjà de 0,54 par an, et aucune variante n'atteint un DSR de 0,95.
 - La baisse due au bloc volatilité rappelle que le résultat de Moreira et Muir (2017), un ajustement dans
   le temps, ne se transpose pas à une comparaison entre devises (étape 2).
 - Le gain du méta-classifieur, qu'un placebo explique, illustre la mise en garde de López de Prado
@@ -1051,7 +1058,7 @@ en 2025. Aucune variante n'est positive chaque année.
    performance observée est compatible avec la chance. C'est un résultat négatif, établi
    rigoureusement : le barème note la qualité de la démonstration, pas la performance.
 
-### Étape 5 — Complément : LSTM ☐
+### Étape 5 — Complément : LSTM ☑
 Cette étape n'est faite qu'une fois l'étape 4 terminée. **Ce n'est pas le cœur du projet.**
 
 **Ce que dit la littérature.**
@@ -1078,7 +1085,89 @@ Cette étape n'est faite qu'une fois l'étape 4 terminée. **Ce n'est pas le cœ
     comparaison soit équitable.
 - **Métriques :** les mêmes qu'à l'étape 1. Le LSTM est aussi branché dans A1, à titre de variante.
 
-**Résultats :** *(à remplir)*
+**Règles fixées avant les calculs (pré-enregistrement).**
+- **Entrée.** À chaque semaine $t$, le vecteur des 55 variables distinctes des 5 paires : 10 variables
+  propres à chaque paire (4 de taux, 6 techniques) et 5 variables communes (variations des taux US à
+  2 et 10 ans, or, S&P 500, pétrole). Le réseau voit la séquence des $L$ dernières semaines, de $t-L+1$
+  à $t$.
+- **Sortie.** Le vecteur des 5 rendements de la semaine suivante (apprentissage multitâche, Caruana,
+  1997).
+- **Standardisation.** Entrées et cibles sont standardisées avec la moyenne et l'écart-type de la
+  fenêtre d'entraînement seulement, puis les prévisions sont ramenées à l'échelle des rendements.
+- **Architecture et entraînement.**
+  - une couche LSTM suivie d'une couche linéaire à 5 sorties, avec une perte quadratique ;
+  - optimiseur Adam (taux de 0,001), lots de 64, au plus 200 époques ;
+  - arrêt précoce, avec une patience de 20 époques, sur les derniers 20 % *chronologiques* de chaque
+    fenêtre d'entraînement. On garde les poids de la meilleure époque.
+- **Réestimation toutes les 52 semaines**, en fenêtre croissante : le modèle est entraîné au début de
+  chaque bloc de 52 semaines sur tout le passé, puis prévoit chaque semaine du bloc. Une **Ridge de
+  référence** est réestimée exactement aux mêmes dates : par paire, avec ses 15 variables, et λ choisi
+  par la validation croisée retenue à l'étape 1. Seule différence avec la Ridge de l'étape 1, qui était
+  réestimée chaque semaine : la fréquence.
+- **Réglage.** Grille de 4 réglages : unités cachées dans {8, 32}, longueur de séquence $L$ dans
+  {4, 12} semaines. Le réglage retenu est **un seul** pour toutes les devises : celui qui a le meilleur
+  R² de validation moyen sur les 5 devises. Seul ce réglage est ensuite évalué, une fois, sur le test.
+- **Graines.** 5 graines par réglage. La prévision est la moyenne des 5 réseaux (Lakshminarayanan et al.,
+  2017), et on rapporte la dispersion entre graines (Bouthillier et al., 2021).
+- **Nombre d'essais.** La stratégie A1 avec le LSTM est un essai de plus pour le Deflated Sharpe Ratio
+  (N passe de 27 à 29, car la Ridge de comparaison donne aussi une stratégie évaluée sur le test).
+
+**Résultats.** Script `Code/experiments/e5_lstm.py`, résultats dans `experiments/E5_lstm/`. PyTorch
+2.15.0 (processeur), dont la version est ajoutée à `requirements-lock.txt`. Les entraînements sont
+déterministes : relancer le script redonne exactement les mêmes chiffres. Le calcul complet prend
+18 secondes.
+
+**Réglage sur la validation** (`grille_validation.csv`).
+
+| Unités cachées | L (semaines) | R² de validation moyen (ensemble de 5) | R² d'une graine seule (min ; max) | Époques retenues (moyenne) |
+|---|---|---|---|---|
+| 8 | 4 | −0,55 % | −5,4 % ; −2,1 % | 25 |
+| 8 | 12 | −0,40 % | −5,7 % ; −1,9 % | 24 |
+| **32** | **4** | **−0,34 %** (retenu) | −3,7 % ; −0,4 % | 7 |
+| 32 | 12 | −0,56 % | −2,8 % ; −0,7 % | 7 |
+
+- Aucun réglage n'atteint un R² positif en validation.
+- L'arrêt précoce s'arrête très tôt, après 7 époques en moyenne pour 32 unités : dès que le réseau
+  commence à apprendre la fenêtre d'entraînement, il se dégrade sur la fin de cette fenêtre. Il
+  n'apprend que du bruit.
+
+**Test, une seule fois, pour le réglage retenu.**
+
+| Modèle (réestimé toutes les 52 semaines) | $R^2_{OS}$ validation | $R^2_{OS}$ test | Corrélation de rang, test | Sharpe de la stratégie A1, test [IC à 95 %] |
+|---|---|---|---|---|
+| LSTM à 5 sorties (moyenne de 5 graines) | −0,12 % | **−0,43 %** | −0,008 | 0,34 [−0,64 ; 1,20] |
+| Ridge de référence | +0,81 % | −1,10 % | 0,012 | 0,36 [−0,53 ; 1,28] |
+
+- **En précision**, le LSTM fait mieux que la Ridge réestimée aux mêmes dates (−0,43 % contre −1,10 %),
+  mais reste sous la moyenne historique.
+- **En classement des devises**, ce qui compte pour la stratégie, le LSTM ne fait rien : sa corrélation
+  de rang est nulle. Le Sharpe de la stratégie A1 est le même que celui de la Ridge (0,34 contre 0,36),
+  avec des intervalles de confiance très larges qui contiennent zéro.
+- **L'ensemble de graines fait l'essentiel du travail :** chaque réseau seul a un $R^2_{OS}$ de test
+  entre −2,3 % et −1,8 %, alors que leur moyenne est à −0,43 %. Moyenner des réseaux qui ont surtout
+  appris du bruit ramène la prévision vers la moyenne. C'est la réduction de variance attendue d'un
+  ensemble (Lakshminarayanan et al., 2017), et cela montre pourquoi une graine unique serait trompeuse
+  (Bouthillier et al., 2021).
+- **Comparaison avec l'étape 1 :** la Ridge réestimée chaque semaine faisait mieux sur le test (+0,04 %)
+  que la Ridge réestimée toutes les 52 semaines (−1,10 %). La fréquence de réestimation coûte donc
+  autant que le choix du modèle. C'est pourquoi le LSTM est comparé à une Ridge de *même fréquence*, et
+  non à celle de l'étape 1.
+
+![LSTM contre Ridge de même fréquence](../experiments/E5_lstm/fig_lstm_contre_ridge.png)
+
+**Comparaison avec la littérature.**
+- Le résultat rejoint Hewamalage, Bergmeir et Bandara (2021) : les réseaux récurrents ne sont pas une
+  solution universelle. Il rejoint aussi Makridakis, Spiliotis et Assimakopoulos (2018) : avec peu de
+  données et un signal faible, des méthodes simples font aussi bien.
+- Il nuance Fischer et Krauss (2018) : leur LSTM disposait de données journalières sur des centaines
+  d'actions, donc de bien plus d'exemples que nos 529 à 1 100 semaines.
+- Il confirme l'intuition du professeur, qui doutait que le LSTM fonctionne ici, et va dans le sens de
+  Grinsztajn et al. (2022) pour des données tabulaires de taille moyenne.
+
+**Ce qu'il faut retenir de l'étape 5.** Le LSTM multitâche a été essayé avec un protocole équitable :
+même découpage, Ridge de même fréquence, réglage sur la validation, ensemble de graines. Il ne trouve
+pas de structure exploitable, et son seul avantage en précision vient de l'effet de moyenne de
+l'ensemble. Cela renforce la conclusion de l'étape 4.
 
 ### Étape 6 — Revue de littérature ML (en continu) ◐
 La carte de la littérature, prête pour la section « travaux reliés » du rapport, est à la section 9. À
@@ -1107,7 +1196,8 @@ Chaque variante est inscrite **avant** d'être évaluée sur le test.
 | E2.1 | 2 | GARCH, HAR (log), VR semaine passée, écart-type 12 sem. ; Diebold-Mariano contre GARCH, Holm sur 15 tests | oui : HAR (QLIKE validation 0,543) | oui, une fois | QLIKE test : HAR 0,401, GARCH 0,415 ; HAR jamais significatif après Holm | `experiments/E2_volatilite/` |
 | E2.2 | 2 | Ablation du signal : $\hat r$ seul contre $\hat r/\hat\sigma$ (4 volatilités), pour MIXT et la moyenne | — (mesure de l'apport) | oui, une fois | diviser par $\hat\sigma$ n'améliore pas la corrélation de rang | `experiments/E2_volatilite/` |
 | E3 | 3 | Méta-classifieur de la stratégie actuelle : AUC et calibration, placebo (10 000), permutation des étiquettes (1 000), risque-couverture, seuils sur la validation | — (τ fixé *a priori*) | oui, une fois | placebo p = 0,118 ; AUC p = 0,136 (achats), 0,065 (ventes) ; $|\hat s|$ aussi bon que $\hat p$ | `experiments/E3_meta/` |
-| E4 | 4 | Ablation A0 → A3 pour la chaîne d'origine (principale) et la chaîne mise à jour (moyenne + HAR, exploratoire) ; placebos, IC à 95 %, DSR (N = 27), rendements par année, part du financement | oui : moyenne choisie par validation emboîtée | oui, une fois | A3 origine 0,88 (IC [0,09 ; 1,83], placebo p = 0,117, DSR 0,77) ; A3 mise à jour 0,74 (placebo p = 0,48) | `experiments/E4_ablation/` |
+| E4 | 4 | Ablation A0 → A3 pour la chaîne d'origine (principale) et la chaîne mise à jour (moyenne + HAR, exploratoire) ; placebos, IC à 95 %, DSR (N = 29), rendements par année, part du financement | oui : moyenne choisie par validation emboîtée | oui, une fois | A3 origine 0,88 (IC [0,09 ; 1,83], placebo p = 0,117, DSR 0,77) ; A3 mise à jour 0,74 (placebo p = 0,48) | `experiments/E4_ablation/` |
+| E5 | 5 | LSTM à 5 sorties (grille 2 × 2, 5 graines, réestimé toutes les 52 sem.) contre Ridge de même fréquence | oui : 32 unités, L = 4 | oui, une fois | R²_OS test : LSTM −0,43 %, Ridge −1,10 % ; IC de rang du LSTM ≈ 0 ; Sharpe A1 : LSTM 0,34, Ridge 0,36 (essais n° 28 et 29) | `experiments/E5_lstm/` |
 | E0 | 0 | Référence recalculée sur le Mac de l'étude (données figées, Python 3.12, versions de `requirements-lock.txt`) : base de comparaison de toutes les variantes | — | recalcul de la référence, pas une nouvelle variante | identique au commit sauf la forêt pour CAD et CHF (étape 0) | `experiments/E0_reference_mac/`, script `Code/experiments/e0_reference_mac.py` |
 
 ---

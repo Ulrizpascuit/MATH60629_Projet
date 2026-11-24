@@ -125,6 +125,11 @@ def trial_sharpes(new_weekly_sharpes):
     trials += [(f"E2.2 : {s} / {g}", t / np.sqrt(260))
                for s, g, t in zip(sig.Source, sig.Signal, sig.Ecart_haut_bas_t)]
     trials += [(f"E4 : {k}", v) for k, v in new_weekly_sharpes.items()]
+    # Étape 5 : stratégies A1 du LSTM et de la Ridge réestimée toutes les 52 semaines
+    lstm = EXP / "E5_lstm" / "resume.csv"
+    if lstm.exists():
+        r5 = pd.read_csv(lstm)
+        trials += [(f"E5 : A1 {m}", s / np.sqrt(52)) for m, s in zip(r5.Model, r5.Sharpe_A1_test)]
     return pd.DataFrame(trials, columns=["Essai", "Sharpe_hebdo"])
 
 
