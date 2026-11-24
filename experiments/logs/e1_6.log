@@ -1,0 +1,21 @@
+EURUSD   -0.0070
+GBPUSD   -0.0007
+CADUSD   -0.0065
+CHFUSD    0.0143
+JPYUSD    0.0008
+                  Importance_moyenne  IC95_bas  IC95_haut
+Δ taux US 10 ans              -0.102    -0.213      0.010
+Δ taux US 2 ans               -0.074    -0.306      0.131
+Bollinger %B                  -0.021    -0.281      0.226
+MACD                           0.002    -0.164      0.195
+RSI                            0.021    -0.162      0.136
+Écart 2 ans                    0.027    -0.029      0.096
+Δ écart 2 ans                  0.042    -0.413      0.307
+Écart 10 ans                   0.061    -0.037      0.144
+Vol. 12 sem.                   0.065    -0.219      0.251
+Rend. S&P 500                  0.072    -0.083      0.246
+Rend. pétrole                  0.138    -0.228      0.456
+Δ écart 10 ans                 0.160    -0.013      0.373
+Rend. or                       0.237    -0.204      0.531
+Vol. 4 sem.                    0.286     0.061      0.546
+Rend. retardé                  0.323     0.124      0.592

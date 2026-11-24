@@ -396,7 +396,7 @@ mkdir -p latex/tables latex/figures && .venv/bin/python Code/ml_analysis.py
   pas (le dépôt Overleaf n'est pas cloné localement). Le dossier a été créé à la main ; il est ignoré par
   git.
 
-### Étape 1 — Bloc ML 1 : prévoir les rendements ☑ (sauf 1.6 pour la forêt réglée)
+### Étape 1 — Bloc ML 1 : prévoir les rendements ☑
 **Question.** Les modèles prévoient-ils mieux que la moyenne historique ? Choisir un modèle par paire
 (MIXT) vaut-il mieux que les combiner ?
 
@@ -580,9 +580,40 @@ appris, avec la validation croisée retenue en 1.2 et la forêt réglée en 1.3.
 
 ![Stabilité de MIXT](../experiments/E1_5_stabilite_mixt/fig_stabilite_mixt.png)
 
-**1.6 — Interprétation.** Les fréquences de sélection des variables et l'importance dans la forêt
-existent déjà dans `experiments/E0_reference_mac/outputs/ml/` (forêt de l'ancien réglage). À
-recalculer pour la forêt réglée si on les met dans le rapport.
+**1.6 — Interprétation** (`experiments/E1_6_importance/`, script `e1_6_importance.py`).
+
+*Règle fixée avant le calcul.* L'importance dans la forêt réglée (feuilles ≥ 25, 3 variables) est
+mesurée **par permutation**, et non par la réduction d'impureté de l'ancien projet, qui est biaisée
+(Strobl et al., 2007) et donnait des importances presque toutes égales (5,5 % à 8,5 %). La forêt est
+entraînée sur les 529 premières semaines. On mélange ensuite une variable à la fois sur les 354
+semaines de validation, 30 fois, et on mesure la perte de R² (Breiman, 2001). La mesure se fait ainsi
+sur des données que la forêt n'a pas vues, sans toucher au test. Les fréquences de sélection des
+modèles linéaires viennent de la référence E0 ; elles ne changent pas, puisque le schéma de validation
+croisée retenu est celui de l'ancien projet.
+
+*Résultats.*
+- **Les importances sont minuscules.** La variable la plus importante fait perdre au plus 0,3 point de
+  R² quand on la mélange. C'est cohérent avec un modèle dont le R² de validation est lui-même proche de
+  zéro (entre −0,7 % et +1,4 % selon la devise, pour cette forêt unique).
+- Seules deux variables ont un intervalle qui exclut zéro : **le rendement de la semaine passée**
+  (+0,32 point) et **la volatilité sur 4 semaines** (+0,29 point). Toutes deux sont des variables
+  techniques de la devise elle-même. Les variations des taux US ont même une importance légèrement
+  négative : les mélanger améliore un peu la prévision, ce qui veut dire que la forêt les sur-ajuste.
+- **Limite :** l'intervalle ne reflète que le hasard des permutations. Il ne tient pas compte de
+  l'incertitude sur la forêt elle-même ni de l'échantillon, et il faut donc le lire avec prudence.
+- **Modèles linéaires :** ils ne s'entendent pas d'une devise à l'autre. Le pas-à-pas garde presque
+  toujours une ou deux variables par devise, mais jamais les mêmes : le Δ écart 10 ans pour CAD et CHF,
+  le rendement de l'or et du pétrole pour GBP, le rendement retardé pour CAD et JPY. Le Lasso et
+  l'Elastic net retiennent beaucoup de variables pour CHF, et presque aucune pour GBP. L'absence d'un
+  noyau de variables commun à toutes les devises est un autre signe d'un signal faible et instable.
+- **Comparaison avec la littérature :** Gu, Kelly et Xiu (2020) trouvent, sur les actions, que les
+  variables les plus importantes sont des variables de prix récents (momentum, liquidité, volatilité),
+  communes à presque tous leurs modèles. Nous retrouvons la même famille (rendement retardé, volatilité
+  récente) pour la forêt, mais avec des effets beaucoup plus faibles et sans accord entre les modèles.
+
+![Importance par permutation, forêt réglée](../experiments/E1_6_importance/fig_importance_permutation.png)
+
+![Fréquence de sélection des variables, modèles linéaires](../experiments/E1_6_importance/fig_frequence_selection.png)
 
 **Ce qu'il faut retenir de l'étape 1.**
 1. Les rendements hebdomadaires sont presque imprévisibles : aucun modèle ne bat significativement la
@@ -639,9 +670,9 @@ hypothèse claire à vérifier : le HAR fait-il mieux que le GARCH sur nos devis
   (Patton, 2011).
 - **Tests.** Chaque modèle est comparé au GARCH par un test de Diebold et Mariano (1995) sur la perte
   QLIKE, bilatéral, avec la correction pour petits échantillons de Harvey, Leybourne et Newbold (1997).
-  La variance de long terme est estimée par Newey-West, avec le nombre de retards
+  La variance de long terme est estimée par Newey-West (Newey et West, 1987), avec le nombre de retards
   $\lfloor 4 (n/100)^{2/9} \rfloor$, parce que les écarts de perte entre deux modèles de volatilité sont
-  autocorrélés. Sur le test, les 15 tests (3 modèles × 5 devises) sont corrigés par Holm, et on rapporte
+  autocorrélés (règle de Newey et West, 1994). Sur le test, les 15 tests (3 modèles × 5 devises) sont corrigés par Holm, et on rapporte
   les succès à 5 % et à 10 %, comme à l'étape 1.
 - **Ablation du signal (2.2).** Elle est faite pour deux prévisions de rendement : MIXT (la stratégie
   actuelle) et la moyenne simple (meilleure à l'étape 1). Signaux comparés : $\hat r$ seul, puis
@@ -800,7 +831,7 @@ flowchart LR
   temps réel ne pourrait pas faire.
 
 **Équation :** la régression logistique, $\hat p = 1/(1+\exp[-(\beta_0 + \beta^\top x)])$ (ESL §4.4 ;
-diapos *supervised*, p. 74).
+diapos *nn*, p. 60, pour la sortie sigmoïde).
 
 **Figures à produire :**
 - courbe ROC et courbe de calibration (existe dans `ml_analysis.py`) ;
@@ -1169,10 +1200,32 @@ même découpage, Ridge de même fréquence, réglage sur la validation, ensembl
 pas de structure exploitable, et son seul avantage en précision vient de l'effet de moyenne de
 l'ensemble. Cela renforce la conclusion de l'étape 4.
 
-### Étape 6 — Revue de littérature ML (en continu) ◐
-La carte de la littérature, prête pour la section « travaux reliés » du rapport, est à la section 9. À
-chaque étape terminée, on ajoute à la section « Résultats » une phrase qui compare notre résultat à celui
-de la littérature citée dans l'étape.
+### Étape 6 — Revue de littérature ML ☑
+La carte de la littérature, prête pour la section « travaux reliés » du rapport, est à la section 9.
+Chaque étape terminée compare son résultat à la littérature citée.
+
+**Vérifications faites.**
+- **Les 75 références de la bibliographie sont toutes vérifiées.** 40 ont été comparées aux
+  métadonnées officielles de Crossref : titre, auteurs, revue, volume, numéro, pages et DOI. 32 ont été
+  vérifiées sur le site de la revue, de la conférence ou d'un dépôt reconnu (JMLR, NeurIPS, arXiv, NBER,
+  CEPR, RePEc), surtout des publications sans DOI Crossref. Les 3 dernières sont des manuels. Les
+  volumes, pages et DOI sont maintenant donnés pour chaque référence (section 11).
+- **Chaque citation du texte figure dans la bibliographie**, et inversement (contrôle automatique).
+  Deux références manquaient et ont été ajoutées : Newey et West (1987, 1994), pour l'estimateur de la
+  variance utilisé à l'étape 2.
+- **Les pages des diapos du cours** ont été vérifiées en lisant le texte de chaque page citée. Une
+  correction : la page 74 des diapos *supervised* porte sur l'analyse discriminante linéaire (dont la
+  probabilité a posteriori a la forme logistique), et non sur la régression logistique elle-même. La
+  sortie sigmoïde pour une cible binaire est en page 60 des diapos *nn* (section 10).
+- **La nouveauté du méta-labeling a été revérifiée.** La recherche a fait trouver une étude proche,
+  Chalkidis et Savani (2021), qui applique la classification sélective au trading. La phrase sur notre
+  contribution a été nuancée en conséquence (section 9).
+
+**Restant à faire.**
+- Confirmer le DOI de Joubert (2022) et de Meyer et al. (2023) sur le site du *Journal of Financial
+  Data Science*.
+- Choisir en équipe le style de citation du rapport (auteur-année, comme ici, ou numérique).
+- Décider en équipe de raccourcir ou non la partie financière (Moreira et Muir, Menkhoff et al.).
 
 ### Étape 7 — Paquet de résultats pour l'équipe ☐
 - les tableaux et figures finales, en PNG et PDF ;
@@ -1193,6 +1246,7 @@ Chaque variante est inscrite **avant** d'être évaluée sur le test.
 | E1.3 | 1 | Forêt : grille de 12 réglages | oui : feuilles ≥ 25, 3 variables | oui, une fois pour le réglage retenu | R²_OS test −0,15 % (contre −5,23 %) | `experiments/E1_3_rf_tuning/` |
 | E1.4 | 1 | MIXT, moyenne simple, stacking contraint (7 membres) | poids du stacking sur la validation | oui, une fois | R²_OS test : MIXT −1,80 %, moyenne −0,32 %, stacking −1,12 % | `experiments/E1_4_combinaison/` |
 | E1.5 | 1 | Bootstrap par blocs de la sélection MIXT | — | non (validation seulement) | modèle rechoisi de 35 % à 80 % du temps | `experiments/E1_5_stabilite_mixt/` |
+| E1.6 | 1 | Importance par permutation de la forêt réglée (validation, 30 répétitions) ; fréquences de sélection des modèles linéaires (E0) | — (interprétation) | non (validation seulement) | seuls le rendement retardé (+0,32 pt de R²) et la vol. 4 sem. (+0,29 pt) excluent zéro | `experiments/E1_6_importance/` |
 | E2.1 | 2 | GARCH, HAR (log), VR semaine passée, écart-type 12 sem. ; Diebold-Mariano contre GARCH, Holm sur 15 tests | oui : HAR (QLIKE validation 0,543) | oui, une fois | QLIKE test : HAR 0,401, GARCH 0,415 ; HAR jamais significatif après Holm | `experiments/E2_volatilite/` |
 | E2.2 | 2 | Ablation du signal : $\hat r$ seul contre $\hat r/\hat\sigma$ (4 volatilités), pour MIXT et la moyenne | — (mesure de l'apport) | oui, une fois | diviser par $\hat\sigma$ n'améliore pas la corrélation de rang | `experiments/E2_volatilite/` |
 | E3 | 3 | Méta-classifieur de la stratégie actuelle : AUC et calibration, placebo (10 000), permutation des étiquettes (1 000), risque-couverture, seuils sur la validation | — (τ fixé *a priori*) | oui, une fois | placebo p = 0,118 ; AUC p = 0,136 (achats), 0,065 (ventes) ; $|\hat s|$ aussi bon que $\hat p$ | `experiments/E3_meta/` |
@@ -1269,7 +1323,9 @@ volatilité.
 
 **Axe E — Filtrer par classification : méta-labeling et rejet.** Le méta-labeling (López de Prado,
 2018 ; Joubert, 2022 ; Meyer, Barziy et Joubert, 2023) correspond, en ML, à la classification avec option
-de rejet (Chow, 1970 ; Herbei et Wegkamp, 2006 ; El-Yaniv et Wiener, 2010 ; Geifman et El-Yaniv, 2017). La
+de rejet (Chow, 1970 ; Herbei et Wegkamp, 2006 ; El-Yaniv et Wiener, 2010 ; Geifman et El-Yaniv, 2017),
+déjà appliquée à des stratégies de trading qui s'abstiennent de prendre position (Chalkidis et Savani,
+2021). La
 qualité des probabilités se mesure par le score de Brier (Brier, 1950) et la calibration (Niculescu-Mizil
 et Caruana, 2005), la capacité à classer par l'AUC (Fawcett, 2006), et la présence d'un vrai signal par un
 test de permutation (Ojala et Garriga, 2010).
@@ -1285,9 +1341,13 @@ variabilité due aux graines doit être rapportée (Bouthillier et al., 2021).
 **Où se situe notre contribution.**
 - La plupart des travaux ML sur le change sont **mensuels** (Amat et al., 2018 ; Filippou et al.) ; nous
   travaillons à l'horizon **hebdomadaire**, avec un ensemble de données construit pour l'étude.
-- Les travaux sur le méta-labeling viennent surtout de praticiens et évaluent le filtre par la
-  performance de la stratégie ; à notre connaissance, il est rarement confronté à des placebos et aux
-  outils de la classification sélective. *(Affirmation à revérifier avant la rédaction.)*
+- Les travaux sur le méta-labeling viennent surtout de praticiens (López de Prado, 2018 ; Joubert,
+  2022 ; Meyer et al., 2023) et évaluent le filtre par la performance de la stratégie. La classification
+  sélective a déjà été appliquée au trading, avec un classifieur qui s'abstient de prendre position
+  (Chalkidis et Savani, 2021). En revanche, nos recherches (24 novembre 2026) n'ont pas trouvé d'étude
+  publiée qui évalue un méta-classifieur **contre des filtres au hasard gardant le même nombre de
+  trades** et **contre la confiance du modèle primaire**, comme nous le faisons. Dans le rapport, on le
+  formulera prudemment : « à notre connaissance ».
 - Notre étude d'ablation mesure séparément la contribution de chaque bloc ML, plutôt que de rapporter
   seulement la performance de la chaîne complète.
 
@@ -1306,7 +1366,7 @@ variabilité due aux graines doit être rapportée (Bouthillier et al., 2021).
 | Sous-ajustement, sur-ajustement, régularisation, biais-variance | Diapos *ml-fundamentals*, p. 47–50, 59–62, 69–79 ; Goodfellow et al. (2016), §5.2 et §5.4 ; ESL §2.9 et §7.2–7.3 |
 | Ensemble de validation, hyperparamètres, validation croisée | Diapos *ml-fundamentals*, p. 63–67 ; Goodfellow et al. (2016), §5.3 et §5.3.1 ; ESL §7.10 |
 | Pas-à-pas, Ridge, Lasso, régression sur composantes principales | ESL §3.3, §3.4 et §3.5.1 |
-| Régression logistique | ESL §4.4 ; diapos *supervised*, p. 74 |
+| Régression logistique | ESL §4.4 ; diapos *supervised*, p. 74 (pour deux classes, la probabilité a posteriori de l'analyse discriminante linéaire a la forme logistique) ; diapos *nn*, p. 60 (unité de sortie sigmoïde pour une cible binaire) |
 | Bootstrap | ESL §7.11 et §8.2 |
 | Bagging, moyenne de modèles, stacking | ESL §8.7 et §8.8 |
 | Forêt aléatoire et importance des variables | ESL ch. 15 (§15.3.2 pour l'importance) |
@@ -1314,115 +1374,124 @@ variabilité due aux graines doit être rapportée (Bouthillier et al., 2021).
 | Réseaux de neurones, arrêt précoce | Goodfellow et al. (2016), ch. 6 ; diapos *nn*, p. 61 ; ESL ch. 11 |
 | LSTM et gradient qui s'évanouit | Diapos *rnn-cnn*, p. 38 |
 
-*Les numéros de pages des diapos viennent d'une recherche par mots-clés dans les PDF du cours ; à
-confirmer visuellement avant de les citer dans le rapport.*
+*Les numéros de pages des diapos ont été vérifiés en extrayant le texte de chaque page citée dans les
+PDF du cours.*
 
 ---
 
 ## 11. Bibliographie
 
-**Statut :** « en ligne » = titre, auteurs et revue vérifiés en ligne lors de la préparation ; « classique »
-= référence fondatrice très citée, dont il faudra confirmer les pages au moment de la rédaction.
+**Statut de vérification** (24 novembre 2026) :
+- **Crossref** : titre, auteurs, revue, volume, numéro, pages et DOI comparés aux métadonnées officielles
+  de Crossref ;
+- **en ligne** : notice vérifiée sur le site de la revue, de la conférence ou d'un dépôt reconnu (JMLR,
+  NeurIPS, arXiv, NBER, CEPR, RePEc), pour les publications sans DOI Crossref ;
+- **manuel** : ouvrage de référence (éditeur et année connus).
+
+Dans le texte, « ESL » désigne Hastie, Tibshirani et Friedman (2009).
 
 ### Axe A — Change et apprentissage automatique
 | Référence | Statut |
 |---|---|
 | Amat, C., Michalski, T. et Stoltz, G. (2018). Fundamentals and exchange rate forecastability with simple machine learning methods. *Journal of International Money and Finance*, 88, 1–24. doi:10.1016/j.jimonfin.2018.06.003 | en ligne |
-| Campbell, J. Y. et Thompson, S. B. (2008). Predicting excess stock returns out of sample: Can anything beat the historical average? *Review of Financial Studies*, 21(4), 1509–1531. | classique |
+| Campbell, J. Y. et Thompson, S. B. (2008). Predicting excess stock returns out of sample: Can anything beat the historical average? *Review of Financial Studies*, 21(4), 1509–1531. doi:10.1093/rfs/hhm055 | Crossref |
 | Filippou, I., Rapach, D., Taylor, M. et Zhou, G. Exchange rate prediction with machine learning and a smart carry trade portfolio. CEPR Discussion Paper DP15305. | en ligne (document de travail) |
-| Gu, S., Kelly, B. et Xiu, D. (2020). Empirical asset pricing via machine learning. *Review of Financial Studies*, 33(5), 2223–2273. | classique |
+| Gu, S., Kelly, B. et Xiu, D. (2020). Empirical asset pricing via machine learning. *Review of Financial Studies*, 33(5), 2223–2273. doi:10.1093/rfs/hhaa009 | Crossref |
 | Kılıç, R. (2025). Virtue or mirage? Complexity in exchange rate prediction. Federal Reserve, FEDS 2025-089. | en ligne |
-| Lustig, H., Roussanov, N. et Verdelhan, A. (2011). Common risk factors in currency markets. *Review of Financial Studies*, 24(11), 3731–3777. | classique |
-| Meese, R. A. et Rogoff, K. (1983). Empirical exchange rate models of the seventies: Do they fit out of sample? *Journal of International Economics*, 14(1–2), 3–24. | classique |
-| Menkhoff, L., Sarno, L., Schmeling, M. et Schrimpf, A. (2012). Currency momentum strategies. *Journal of Financial Economics*, 106(3), 660–684. | classique |
-| Rossi, B. (2013). Exchange rate predictability. *Journal of Economic Literature*, 51(4), 1063–1119. | classique |
-| Welch, I. et Goyal, A. (2008). A comprehensive look at the empirical performance of equity premium prediction. *Review of Financial Studies*, 21(4), 1455–1508. | classique |
+| Lustig, H., Roussanov, N. et Verdelhan, A. (2011). Common risk factors in currency markets. *Review of Financial Studies*, 24(11), 3731–3777. doi:10.1093/rfs/hhr068 | Crossref |
+| Meese, R. A. et Rogoff, K. (1983). Empirical exchange rate models of the seventies: Do they fit out of sample? *Journal of International Economics*, 14(1–2), 3–24. doi:10.1016/0022-1996(83)90017-X | Crossref |
+| Menkhoff, L., Sarno, L., Schmeling, M. et Schrimpf, A. (2012). Currency momentum strategies. *Journal of Financial Economics*, 106(3), 660–684. doi:10.1016/j.jfineco.2012.06.009 | Crossref |
+| Rossi, B. (2013). Exchange rate predictability. *Journal of Economic Literature*, 51(4), 1063–1119. doi:10.1257/jel.51.4.1063 | Crossref |
+| Welch, I. et Goyal, A. (2008). A comprehensive look at the empirical performance of equity premium prediction. *Review of Financial Studies*, 21(4), 1455–1508. doi:10.1093/rfs/hhm014 | Crossref |
 
 ### Axe B — Évaluation, validation croisée, fuite et reproductibilité
 | Référence | Statut |
 |---|---|
-| Arlot, S. et Celisse, A. (2010). A survey of cross-validation procedures for model selection. *Statistics Surveys*, 4, 40–79. | classique |
-| Bergmeir, C. et Benítez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. *Information Sciences*, 191, 192–213. | classique |
+| Arlot, S. et Celisse, A. (2010). A survey of cross-validation procedures for model selection. *Statistics Surveys*, 4, 40–79. doi:10.1214/09-SS054 | Crossref |
+| Bergmeir, C. et Benítez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. *Information Sciences*, 191, 192–213. doi:10.1016/j.ins.2011.12.028 | Crossref |
 | Bergmeir, C., Hyndman, R. J. et Koo, B. (2018). A note on the validity of cross-validation for evaluating autoregressive time series prediction. *Computational Statistics & Data Analysis*, 120, 70–83. doi:10.1016/j.csda.2017.11.003 | en ligne |
 | Cawley, G. C. et Talbot, N. L. C. (2010). On over-fitting in model selection and subsequent selection bias in performance evaluation. *Journal of Machine Learning Research*, 11, 2079–2107. | en ligne |
 | Cerqueira, V., Torgo, L. et Mozetič, I. (2020). Evaluating time series forecasting models: An empirical study on performance estimation methods. *Machine Learning*, 109(11), 1997–2028. doi:10.1007/s10994-020-05910-7 | en ligne |
 | Kaufman, S., Rosset, S., Perlich, C. et Stitelman, O. (2012). Leakage in data mining: Formulation, detection, and avoidance. *ACM Transactions on Knowledge Discovery from Data*, 6(4), article 15. doi:10.1145/2382577.2382579 | en ligne |
 | Pineau, J. et al. (2021). Improving reproducibility in machine learning research (A report from the NeurIPS 2019 reproducibility program). *Journal of Machine Learning Research*, 22(164), 1–20. | en ligne |
 | Racine, J. (2000). Consistent cross-validatory model-selection for dependent data: hv-block cross-validation. *Journal of Econometrics*, 99(1), 39–61. doi:10.1016/S0304-4076(00)00030-0 | en ligne |
-| Tashman, L. J. (2000). Out-of-sample tests of forecasting accuracy: An analysis and review. *International Journal of Forecasting*, 16(4), 437–450. | classique |
+| Tashman, L. J. (2000). Out-of-sample tests of forecasting accuracy: An analysis and review. *International Journal of Forecasting*, 16(4), 437–450. doi:10.1016/S0169-2070(00)00065-0 | Crossref |
 
 ### Axe C — Régularisation, arbres, sélection et combinaison
 | Référence | Statut |
 |---|---|
-| Bates, J. M. et Granger, C. W. J. (1969). The combination of forecasts. *Operational Research Quarterly*, 20(4), 451–468. | classique |
-| Breiman, L. (1996). Stacked regressions. *Machine Learning*, 24(1), 49–64. | classique |
-| Breiman, L. (2001). Random forests. *Machine Learning*, 45(1), 5–32. | classique |
+| Bates, J. M. et Granger, C. W. J. (1969). The combination of forecasts. *Operational Research Quarterly*, 20(4), 451–468. doi:10.2307/3008764 | Crossref |
+| Breiman, L. (1996). Stacked regressions. *Machine Learning*, 24(1), 49–64. doi:10.1023/A:1018046112532 | Crossref |
+| Breiman, L. (2001). Random forests. *Machine Learning*, 45(1), 5–32. doi:10.1023/A:1010933404324 | Crossref |
 | Claeskens, G., Magnus, J. R., Vasnev, A. L. et Wang, W. (2016). The forecast combination puzzle: A simple theoretical explanation. *International Journal of Forecasting*, 32(3), 754–762. doi:10.1016/j.ijforecast.2015.12.005 | en ligne |
-| Hoerl, A. E. et Kennard, R. W. (1970). Ridge regression: Biased estimation for nonorthogonal problems. *Technometrics*, 12(1), 55–67. | classique |
+| Hoerl, A. E. et Kennard, R. W. (1970). Ridge regression: Biased estimation for nonorthogonal problems. *Technometrics*, 12(1), 55–67. doi:10.1080/00401706.1970.10488634 | Crossref |
 | Probst, P., Wright, M. N. et Boulesteix, A.-L. (2019). Hyperparameters and tuning strategies for random forest. *WIREs Data Mining and Knowledge Discovery*, 9(3), e1301. doi:10.1002/widm.1301 | en ligne |
-| Rapach, D. E., Strauss, J. K. et Zhou, G. (2010). Out-of-sample equity premium prediction: Combination forecasts and links to the real economy. *Review of Financial Studies*, 23(2), 821–862. | classique |
-| Smith, J. et Wallis, K. F. (2009). A simple explanation of the forecast combination puzzle. *Oxford Bulletin of Economics and Statistics*, 71(3), 331–355. | classique |
-| Strobl, C., Boulesteix, A.-L., Zeileis, A. et Hothorn, T. (2007). Bias in random forest variable importance measures: Illustrations, sources and a solution. *BMC Bioinformatics*, 8, 25. | classique |
-| Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. *Journal of the Royal Statistical Society, Series B*, 58(1), 267–288. | classique |
-| Timmermann, A. (2006). Forecast combinations. Dans *Handbook of Economic Forecasting*, vol. 1, 135–196. Elsevier. | classique |
-| Wolpert, D. H. (1992). Stacked generalization. *Neural Networks*, 5(2), 241–259. | classique |
-| Zou, H. et Hastie, T. (2005). Regularization and variable selection via the elastic net. *Journal of the Royal Statistical Society, Series B*, 67(2), 301–320. | classique |
+| Rapach, D. E., Strauss, J. K. et Zhou, G. (2010). Out-of-sample equity premium prediction: Combination forecasts and links to the real economy. *Review of Financial Studies*, 23(2), 821–862. doi:10.1093/rfs/hhp063 | Crossref |
+| Smith, J. et Wallis, K. F. (2009). A simple explanation of the forecast combination puzzle. *Oxford Bulletin of Economics and Statistics*, 71(3), 331–355. doi:10.1111/j.1468-0084.2008.00541.x | Crossref |
+| Strobl, C., Boulesteix, A.-L., Zeileis, A. et Hothorn, T. (2007). Bias in random forest variable importance measures: Illustrations, sources and a solution. *BMC Bioinformatics*, 8, 25. doi:10.1186/1471-2105-8-25 | Crossref |
+| Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. *Journal of the Royal Statistical Society, Series B*, 58(1), 267–288. doi:10.1111/j.2517-6161.1996.tb02080.x | Crossref |
+| Timmermann, A. (2006). Forecast combinations. Dans G. Elliott, C. W. J. Granger et A. Timmermann (dir.), *Handbook of Economic Forecasting*, vol. 1, ch. 4, 135–196. Elsevier. | en ligne |
+| Wolpert, D. H. (1992). Stacked generalization. *Neural Networks*, 5(2), 241–259. doi:10.1016/S0893-6080(05)80023-1 | Crossref |
+| Zou, H. et Hastie, T. (2005). Regularization and variable selection via the elastic net. *Journal of the Royal Statistical Society, Series B*, 67(2), 301–320. doi:10.1111/j.1467-9868.2005.00503.x | Crossref |
 
 ### Axe D — Volatilité
 | Référence | Statut |
 |---|---|
 | Andersen, T. G., Bollerslev, T., Diebold, F. X. et Labys, P. (2003). Modeling and forecasting realized volatility. *Econometrica*, 71(2), 579–625. doi:10.1111/1468-0262.00418 | en ligne |
-| Bollerslev, T. (1986). Generalized autoregressive conditional heteroskedasticity. *Journal of Econometrics*, 31(3), 307–327. | classique |
+| Bollerslev, T. (1986). Generalized autoregressive conditional heteroskedasticity. *Journal of Econometrics*, 31(3), 307–327. doi:10.1016/0304-4076(86)90063-1 | Crossref |
 | Christensen, K., Siggaard, M. et Veliyev, B. (2023). A machine learning approach to volatility forecasting. *Journal of Financial Econometrics*, 21(5), 1680–1727. doi:10.1093/jjfinec/nbac032 | en ligne |
-| Corsi, F. (2009). A simple approximate long-memory model of realized volatility. *Journal of Financial Econometrics*, 7(2), 174–196. | classique |
+| Corsi, F. (2009). A simple approximate long-memory model of realized volatility. *Journal of Financial Econometrics*, 7(2), 174–196. doi:10.1093/jjfinec/nbp001 | Crossref |
 | Hansen, P. R. et Lunde, A. (2005). A forecast comparison of volatility models: Does anything beat a GARCH(1,1)? *Journal of Applied Econometrics*, 20(7), 873–889. doi:10.1002/jae.800 | en ligne |
-| Moreira, A. et Muir, T. (2017). Volatility-managed portfolios. *Journal of Finance*, 72(4), 1611–1644. | classique |
-| Patton, A. J. (2011). Volatility forecast comparison using imperfect volatility proxies. *Journal of Econometrics*, 160(1), 246–256. | classique |
+| Moreira, A. et Muir, T. (2017). Volatility-managed portfolios. *Journal of Finance*, 72(4), 1611–1644. doi:10.1111/jofi.12513 | Crossref |
+| Patton, A. J. (2011). Volatility forecast comparison using imperfect volatility proxies. *Journal of Econometrics*, 160(1), 246–256. doi:10.1016/j.jeconom.2010.03.034 | Crossref |
 
 ### Axe E — Méta-labeling, rejet, calibration
 | Référence | Statut |
 |---|---|
-| Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. *Monthly Weather Review*, 78(1), 1–3. | classique |
-| Chow, C. K. (1970). On optimum recognition error and reject tradeoff. *IEEE Transactions on Information Theory*, 16(1), 41–46. | classique |
-| El-Yaniv, R. et Wiener, Y. (2010). On the foundations of noise-free selective classification. *Journal of Machine Learning Research*, 11, 1605–1641. | classique |
-| Fawcett, T. (2006). An introduction to ROC analysis. *Pattern Recognition Letters*, 27(8), 861–874. | classique |
+| Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. *Monthly Weather Review*, 78(1), 1–3. doi:10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2 | Crossref |
+| Chalkidis, N. et Savani, R. (2021). Trading via selective classification. *Proceedings of the Second ACM International Conference on AI in Finance (ICAIF '21)*. arXiv:2110.14914 | en ligne |
+| Chow, C. K. (1970). On optimum recognition error and reject tradeoff. *IEEE Transactions on Information Theory*, 16(1), 41–46. doi:10.1109/TIT.1970.1054406 | Crossref |
+| El-Yaniv, R. et Wiener, Y. (2010). On the foundations of noise-free selective classification. *Journal of Machine Learning Research*, 11, 1605–1641. | en ligne |
+| Fawcett, T. (2006). An introduction to ROC analysis. *Pattern Recognition Letters*, 27(8), 861–874. doi:10.1016/j.patrec.2005.10.010 | Crossref |
 | Geifman, Y. et El-Yaniv, R. (2017). Selective classification for deep neural networks. *Advances in Neural Information Processing Systems 30*. arXiv:1705.08500 | en ligne |
 | Herbei, R. et Wegkamp, M. H. (2006). Classification with reject option. *Canadian Journal of Statistics*, 34(4), 709–721. doi:10.1002/cjs.5550340410 | en ligne |
-| Joubert, J. F. (2022). Meta-labeling: Theory and framework. *Journal of Financial Data Science*, 4(3), 31–44. | en ligne (à confirmer sur le site de la revue) |
-| López de Prado, M. (2018). *Advances in Financial Machine Learning*. Wiley. | classique |
-| Meyer, M., Barziy, I. et Joubert, J. F. (2023). Meta-labeling: Calibration and position sizing. *Journal of Financial Data Science*, 5(2), 23–40. | en ligne (à confirmer sur le site de la revue) |
-| Niculescu-Mizil, A. et Caruana, R. (2005). Predicting good probabilities with supervised learning. *Proceedings of the 22nd International Conference on Machine Learning (ICML)*, 625–632. | classique |
+| Joubert, J. F. (2022). Meta-labeling: Theory and framework. *Journal of Financial Data Science*, 4(3), 31–44. | en ligne (DOI à confirmer sur le site de la revue) |
+| López de Prado, M. (2018). *Advances in Financial Machine Learning*. Wiley. | manuel |
+| Meyer, M., Barziy, I. et Joubert, J. F. (2023). Meta-labeling: Calibration and position sizing. *Journal of Financial Data Science*, 5(2), 23–40. | en ligne (DOI à confirmer sur le site de la revue) |
+| Niculescu-Mizil, A. et Caruana, R. (2005). Predicting good probabilities with supervised learning. *Proceedings of the 22nd International Conference on Machine Learning (ICML)*, 625–632. doi:10.1145/1102351.1102430 | Crossref |
 | Ojala, M. et Garriga, G. C. (2010). Permutation tests for studying classifier performance. *Journal of Machine Learning Research*, 11, 1833–1863. | en ligne |
 
 ### Axe F — Réseaux de neurones et variabilité
 | Référence | Statut |
 |---|---|
 | Bouthillier, X. et al. (2021). Accounting for variance in machine learning benchmarks. *Proceedings of Machine Learning and Systems*, 3. arXiv:2103.03098 | en ligne |
-| Caruana, R. (1997). Multitask learning. *Machine Learning*, 28(1), 41–75. | classique |
-| Fischer, T. et Krauss, C. (2018). Deep learning with long short-term memory networks for financial market predictions. *European Journal of Operational Research*, 270(2), 654–669. | classique |
+| Caruana, R. (1997). Multitask learning. *Machine Learning*, 28(1), 41–75. doi:10.1023/A:1007379606734 | Crossref |
+| Fischer, T. et Krauss, C. (2018). Deep learning with long short-term memory networks for financial market predictions. *European Journal of Operational Research*, 270(2), 654–669. doi:10.1016/j.ejor.2017.11.054 | Crossref |
 | Grinsztajn, L., Oyallon, E. et Varoquaux, G. (2022). Why do tree-based models still outperform deep learning on typical tabular data? *NeurIPS 2022, Datasets and Benchmarks Track*. arXiv:2207.08815 | en ligne |
 | Hewamalage, H., Bergmeir, C. et Bandara, K. (2021). Recurrent neural networks for time series forecasting: Current status and future directions. *International Journal of Forecasting*, 37(1), 388–427. doi:10.1016/j.ijforecast.2020.06.008 | en ligne |
-| Hochreiter, S. et Schmidhuber, J. (1997). Long short-term memory. *Neural Computation*, 9(8), 1735–1780. | classique |
-| Lakshminarayanan, B., Pritzel, A. et Blundell, C. (2017). Simple and scalable predictive uncertainty estimation using deep ensembles. *Advances in Neural Information Processing Systems 30*. | classique |
-| Makridakis, S., Spiliotis, E. et Assimakopoulos, V. (2018). Statistical and machine learning forecasting methods: Concerns and ways forward. *PLOS ONE*, 13(3), e0194889. | classique |
+| Hochreiter, S. et Schmidhuber, J. (1997). Long short-term memory. *Neural Computation*, 9(8), 1735–1780. doi:10.1162/neco.1997.9.8.1735 | Crossref |
+| Lakshminarayanan, B., Pritzel, A. et Blundell, C. (2017). Simple and scalable predictive uncertainty estimation using deep ensembles. *Advances in Neural Information Processing Systems 30*, 6402–6413. | en ligne |
+| Makridakis, S., Spiliotis, E. et Assimakopoulos, V. (2018). Statistical and machine learning forecasting methods: Concerns and ways forward. *PLOS ONE*, 13(3), e0194889. doi:10.1371/journal.pone.0194889 | Crossref |
 
 ### Inférence et tests statistiques
 | Référence | Statut |
 |---|---|
 | Bailey, D. H. et López de Prado, M. (2014). The deflated Sharpe ratio: Correcting for selection bias, backtest overfitting, and non-normality. *Journal of Portfolio Management*, 40(5), 94–107. doi:10.3905/jpm.2014.40.5.094 | en ligne |
-| Clark, T. E. et West, K. D. (2007). Approximately normal tests for equal predictive accuracy in nested models. *Journal of Econometrics*, 138(1), 291–311. | classique |
-| Diebold, F. X. et Mariano, R. S. (1995). Comparing predictive accuracy. *Journal of Business & Economic Statistics*, 13(3), 253–263. | classique |
-| Hansen, P. R., Lunde, A. et Nason, J. M. (2011). The model confidence set. *Econometrica*, 79(2), 453–497. | classique |
-| Harvey, D., Leybourne, S. et Newbold, P. (1997). Testing the equality of prediction mean squared errors. *International Journal of Forecasting*, 13(2), 281–291. | classique |
-| Holm, S. (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. | classique |
-| Künsch, H. R. (1989). The jackknife and the bootstrap for general stationary observations. *Annals of Statistics*, 17(3), 1217–1241. | classique |
-| Politis, D. N. et Romano, J. P. (1994). The stationary bootstrap. *Journal of the American Statistical Association*, 89(428), 1303–1313. | classique |
+| Clark, T. E. et West, K. D. (2007). Approximately normal tests for equal predictive accuracy in nested models. *Journal of Econometrics*, 138(1), 291–311. doi:10.1016/j.jeconom.2006.05.023 | Crossref |
+| Diebold, F. X. et Mariano, R. S. (1995). Comparing predictive accuracy. *Journal of Business & Economic Statistics*, 13(3), 253–263. doi:10.1080/07350015.1995.10524599 | Crossref |
+| Hansen, P. R., Lunde, A. et Nason, J. M. (2011). The model confidence set. *Econometrica*, 79(2), 453–497. doi:10.3982/ECTA5771 | Crossref |
+| Harvey, D., Leybourne, S. et Newbold, P. (1997). Testing the equality of prediction mean squared errors. *International Journal of Forecasting*, 13(2), 281–291. doi:10.1016/S0169-2070(96)00719-4 | Crossref |
+| Holm, S. (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. (JSTOR 4615733) | en ligne |
+| Künsch, H. R. (1989). The jackknife and the bootstrap for general stationary observations. *Annals of Statistics*, 17(3), 1217–1241. doi:10.1214/aos/1176347265 | Crossref |
+| Newey, W. K. et West, K. D. (1987). A simple, positive semi-definite, heteroskedasticity and autocorrelation consistent covariance matrix. *Econometrica*, 55(3), 703–708. doi:10.2307/1913610 | Crossref |
+| Newey, W. K. et West, K. D. (1994). Automatic lag selection in covariance matrix estimation. *Review of Economic Studies*, 61(4), 631–653. doi:10.2307/2297912 | Crossref |
+| Politis, D. N. et Romano, J. P. (1994). The stationary bootstrap. *Journal of the American Statistical Association*, 89(428), 1303–1313. doi:10.1080/01621459.1994.10476870 | Crossref |
 
 ### Manuels du cours
 | Référence | Statut |
 |---|---|
-| Goodfellow, I., Bengio, Y. et Courville, A. (2016). *Deep Learning*. MIT Press (ch. 5 et 6 fournis dans le cours). | cours |
-| Hastie, T., Tibshirani, R. et Friedman, J. (2009). *The Elements of Statistical Learning* (2e éd.). Springer. | cours |
+| Goodfellow, I., Bengio, Y. et Courville, A. (2016). *Deep Learning*. MIT Press (ch. 5 et 6 fournis dans le cours). | manuel |
+| Hastie, T., Tibshirani, R. et Friedman, J. (2009). *The Elements of Statistical Learning* (2e éd.). Springer. Sections citées vérifiées dans la table des matières du PDF du cours. | manuel |
 
 ### Travaux futurs et contexte (cités seulement en perspective)
 | Référence | Statut |
@@ -1431,8 +1500,6 @@ confirmer visuellement avant de les citer dans le rapport.*
 | Kelly, B., Malamud, S. et Zhou, K. (2024). The virtue of complexity in return prediction. *Journal of Finance*, 79(1), 459–503. doi:10.1111/jofi.13298 | en ligne |
 | Nagel, S. (2025). Seemingly virtuous complexity in return prediction. NBER Working Paper 34104. | en ligne |
 | Poh, D., Lim, B., Zohren, S. et Roberts, S. Enhancing cross-sectional currency strategies by context-aware learning to rank with self-attention. arXiv:2105.10019. | en ligne |
-
----
 
 ## 12. Liste de contrôle pour le rapport
 
