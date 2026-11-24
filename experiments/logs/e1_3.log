@@ -1,0 +1,15 @@
+ Leaf  Mtry  R2_validation_moyen
+    5     3             -0.01250
+    5     5             -0.02096
+    5    15             -0.02652
+   25     3             -0.00108
+   25     5             -0.00378
+   25    15             -0.00983
+   50     3             -0.00121
+   50     5             -0.00234
+   50    15             -0.00398
+  100     3             -0.00206
+  100     5             -0.00426
+  100    15             -0.00809
+Réglage retenu (validation) : feuilles >= 25, 3 variables par division
+.venv/bin/python Code/experiments/e1_3_rf_tuning.py  15802.46s user 71.56s system 924% cpu 28:37.01 total

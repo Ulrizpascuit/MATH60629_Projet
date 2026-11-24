@@ -1,0 +1,6 @@
+{
+ "min_samples_leaf": 25,
+ "max_features": 3,
+ "n_estimators": 500,
+ "regle": "meilleur R2 de validation moyen sur 5 devises"
+}

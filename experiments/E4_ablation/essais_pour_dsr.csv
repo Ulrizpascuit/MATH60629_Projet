@@ -1,0 +1,28 @@
+Essai,Sharpe_hebdo
+Ancien projet : Naïf,0.02138131974427043
+Ancien projet : MCO,0.019374462334587464
+Ancien projet : Pas-à-pas,0.11953933593903261
+Ancien projet : Lasso,0.10020545256290633
+Ancien projet : Ridge,0.09237903648534576
+Ancien projet : Elastic net,0.07386068148350797
+Ancien projet : Forêt aléatoire,-0.05019013083074755
+Ancien projet : ACP,0.04581832592723061
+Ancien projet : MIXT,0.06267622340719867
+Ancien projet : MIXT + méta,0.12155507836930449
+Ancien projet : MIXT_Meta_corrigee,0.13782569384580715
+Ancien projet : MIXT_sans_meta_corrigee,0.04346216093481212
+Ancien projet : Naive_corrigee,0.016411806551089262
+E2.2 : MIXT / r_seul,0.0872007656836614
+E2.2 : MIXT / r/GARCH,0.06995739769002317
+E2.2 : MIXT / r/HAR,0.06198857846946419
+E2.2 : MIXT / r/VR_derniere,0.06114312046996029
+E2.2 : MIXT / r/Ecart_type_12,0.06705256546791324
+E2.2 : Moyenne / r_seul,0.08311626181005162
+E2.2 : Moyenne / r/GARCH,0.08480774825089261
+E2.2 : Moyenne / r/HAR,0.07709778948958598
+E2.2 : Moyenne / r/VR_derniere,0.05855335918451292
+E2.2 : Moyenne / r/Ecart_type_12,0.06802754127760174
+E4 : A1 origine (r̂ MIXT),0.07509330405199315
+E4 : A1 mise à jour (r̂ Moyenne),0.07970505550181395
+E4 : A2 mise à jour (r̂/σ̂ HAR),0.07213122849088113
+E4 : A3 mise à jour (+ méta),0.10196509546631916

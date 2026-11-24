@@ -1,0 +1,14 @@
+{
+ "placebo": {
+  "Sharpe_filtre": 0.8765461357071419,
+  "Sharpe_sans_filtre": 0.45196467449418215,
+  "Placebo_moyenne": 0.4815469510851024,
+  "Placebo_q05": -0.06779470775209068,
+  "Placebo_q95": 1.030579892618178,
+  "p_valeur": 0.11788821117888211,
+  "Achats_gardes": 78,
+  "Ventes_gardees": 146,
+  "Tirages": 10000
+ },
+ "coverage_filtre": 0.5714285714285714
+}

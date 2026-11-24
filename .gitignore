@@ -9,3 +9,6 @@ latex/
 # Python
 __pycache__/
 .venv/
+
+# Expériences : les modèles (.pkl) se régénèrent avec le script de chaque expérience
+experiments/**/*.pkl

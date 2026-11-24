@@ -1,0 +1,3 @@
+Seuil,Tests,Mieux_que_GARCH_brut,Moins_bon_que_GARCH_brut,Mieux_que_GARCH_Holm,Moins_bon_que_GARCH_Holm
+0.05,15,2,8,0,3
+0.1,15,2,8,0,5

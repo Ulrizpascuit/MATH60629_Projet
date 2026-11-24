@@ -1,0 +1,21 @@
+{
+ "schema_cv": "aleatoire",
+ "foret": {
+  "min_samples_leaf": 25,
+  "max_features": 3
+ },
+ "mixt_maj": {
+  "EURUSD": "Ridge",
+  "GBPUSD": "Lasso",
+  "CADUSD": "Lasso",
+  "CHFUSD": "Linear",
+  "JPYUSD": "Stepwise"
+ },
+ "mixt_ancien": {
+  "EURUSD": "Ridge",
+  "GBPUSD": "Lasso",
+  "CADUSD": "Lasso",
+  "CHFUSD": "Linear",
+  "JPYUSD": "Stepwise"
+ }
+}

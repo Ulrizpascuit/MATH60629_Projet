@@ -1,0 +1,6 @@
+Pair,Modele_MIXT,Frequence_choix_MIXT,Modele_le_plus_frequent
+EURUSD,Ridge,0.723,Ridge
+GBPUSD,Lasso,0.3505,Lasso
+CADUSD,Lasso,0.803,Lasso
+CHFUSD,Linear,0.587,Linear
+JPYUSD,Stepwise,0.6965,Stepwise

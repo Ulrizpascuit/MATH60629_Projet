@@ -1,0 +1,19 @@
+{
+ "python": "3.12.14",
+ "machine": "arm64",
+ "system": "Darwin 24.6.0",
+ "packages": {
+  "numpy": "2.5.5",
+  "pandas": "3.1.1",
+  "scipy": "1.18.1",
+  "scikit-learn": "1.9.1",
+  "numba": "0.68.1",
+  "joblib": "1.6.0",
+  "matplotlib": "3.11.2"
+ },
+ "schema_cv": "aleatoire",
+ "foret": {
+  "min_samples_leaf": 25,
+  "max_features": 3
+ }
+}

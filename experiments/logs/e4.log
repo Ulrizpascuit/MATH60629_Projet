@@ -1,0 +1,24 @@
+Validation emboîtée : {'R2_MIXT': 0.0211, 'R2_Stacking': 0.02277, 'R2_Moyenne': 0.02676} -> Moyenne
+  Pair MIXT_1re_moitie  R2_MIXT  R2_Stacking  R2_Moyenne
+EURUSD           Ridge   0.0208       0.0166      0.0167
+GBPUSD   Random_Forest  -0.0036       0.0027      0.0128
+CADUSD           Lasso   0.0505       0.0505      0.0366
+CHFUSD          Linear   0.0691       0.0696      0.0590
+JPYUSD   Random_Forest  -0.0313      -0.0255      0.0087
+                   Strategy  Sharpe  Sharpe_IC95_bas  Sharpe_IC95_haut  Ann_return  Max_drawdown  Weeks_traded  Rang_parmi_1000_au_hasard  Placebo_moyenne  p_valeur   DSR
+                    A0 Naïf   0.154           -0.765             1.023       0.011        -0.181         0.738                      0.653              NaN       NaN 0.189
+       A1 origine (r̂ MIXT)   0.542           -0.429             1.513       0.036        -0.146         0.754                      0.874              NaN       NaN 0.492
+   A2 origine (r̂/σ̂ GARCH)   0.452           -0.406             1.361       0.029        -0.135         0.754                      0.828              NaN       NaN 0.413
+        A3 origine (+ méta)   0.877            0.092             1.828       0.058        -0.081         0.715                      0.973            0.479     0.117 0.767
+A1 mise à jour (r̂ Moyenne)   0.575           -0.344             1.573       0.042        -0.134         0.854                      0.909              NaN       NaN 0.521
+ A2 mise à jour (r̂/σ̂ HAR)   0.520           -0.369             1.505       0.037        -0.109         0.854                      0.878              NaN       NaN 0.473
+    A3 mise à jour (+ méta)   0.735           -0.081             1.583       0.055        -0.111         0.854                      0.964            0.724     0.484 0.661
+N essais = 27, SR0 annualisé = 0.551
+       A0 Naïf  A1 origine (r̂ MIXT)  A2 origine (r̂/σ̂ GARCH)  A3 origine (+ méta)  A1 mise à jour (r̂ Moyenne)  A2 mise à jour (r̂/σ̂ HAR)  A3 mise à jour (+ méta)
+Annee                                                                                                                                                                
+2021    0.0581                0.0615                    0.0395               0.0235                       0.0408                      0.0432                   0.0457
+2022   -0.0429                0.1014                    0.1202               0.1836                       0.1831                      0.1595                   0.1300
+2023   -0.0178                0.0021                   -0.0224               0.0170                       0.0379                      0.0194                   0.1233
+2024    0.0543               -0.0543                   -0.0405               0.0478                       0.0020                      0.0036                   0.0606
+2025   -0.0406                0.0125                   -0.0053              -0.0242                      -0.0731                     -0.0481                  -0.0899
+2026    0.0417                0.0580                    0.0545               0.0409                       0.0204                      0.0086                   0.0034
