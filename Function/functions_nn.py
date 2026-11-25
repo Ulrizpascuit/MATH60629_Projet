@@ -43,30 +43,34 @@ def sequences(X, seq_len):
 
 ## ---- models ----
 class MLP(nn.Module):
-    def __init__(self, n_in, hidden, dropout):
+    def __init__(self, n_in, hidden, dropout, n_out=1):
         super().__init__()
+        self.n_out = n_out
         layers, d = [], n_in
         for h in hidden:
             layers += [nn.Linear(d, h), nn.SiLU(), nn.Dropout(dropout)]
             d = h
-        layers.append(nn.Linear(d, 1))
+        layers.append(nn.Linear(d, n_out))
         self.net = nn.Sequential(*layers)
 
-    def forward(self, x):  # x : (B, P, F)
-        return self.net(x).squeeze(-1)
+    def forward(self, x):  # x : (B, P, F) -> (B, P) ou (B, P, n_out)
+        out = self.net(x)
+        return out.squeeze(-1) if self.n_out == 1 else out
 
 
 class GRUNet(nn.Module):
-    def __init__(self, n_in, hidden, dropout):
+    def __init__(self, n_in, hidden, dropout, n_out=1):
         super().__init__()
+        self.n_out = n_out
         self.gru = nn.GRU(n_in, hidden, batch_first=True)
         self.drop = nn.Dropout(dropout)
-        self.out = nn.Linear(hidden, 1)
+        self.out = nn.Linear(hidden, n_out)
 
     def forward(self, x):  # x : (B, P, L, F)
         B, P, L, F = x.shape
         _, h = self.gru(x.reshape(B * P, L, F))
-        return self.out(self.drop(h[-1])).reshape(B, P)
+        out = self.out(self.drop(h[-1])).reshape(B, P, self.n_out)
+        return out.squeeze(-1) if self.n_out == 1 else out
 
 
 ## ---- losses ----
@@ -79,6 +83,20 @@ def rank_loss(scores, z):
 
 def mse_loss(scores, z):
     return ((scores - z) ** 2).mean()
+
+
+def class_labels(z, k):
+    """0 = forte baisse (z < -k), 1 = neutre, 2 = forte hausse (z > k)."""
+    return (z > k).long() * 2 + ((z >= -k) & (z <= k)).long()
+
+
+def cls_loss(out, z, k):
+    """Deux têtes : direction en 3 classes (entropie croisée) et amplitude
+    |z| > k (entropie croisée binaire). out : (B, P, 4) = 3 logits + 1 logit."""
+    direction = nn.functional.cross_entropy(out[..., :3].reshape(-1, 3), class_labels(z, k).reshape(-1))
+    big = (z.abs() > k).float()
+    magnitude = nn.functional.binary_cross_entropy_with_logits(out[..., 3], big)
+    return direction + magnitude
 
 
 LOSSES = {"mse": mse_loss, "rank": rank_loss}
@@ -103,16 +121,30 @@ def fit_model(X, z, train_weeks, cfg, seed, max_epochs=150, patience=15, batch_w
     np.random.seed(seed)
     torch.set_num_threads(1)
     Xs = prepare_inputs(X, train_weeks, cfg)
+    n_out = 4 if cfg["loss"] == "cls" else 1
     if cfg["arch"] == "gru":
-        model = GRUNet(Xs.shape[-1], cfg["hidden"], cfg["dropout"])
+        model = GRUNet(Xs.shape[-1], cfg["hidden"], cfg["dropout"], n_out)
     else:
-        model = MLP(Xs.shape[-1], cfg["hidden"], cfg["dropout"])
+        model = MLP(Xs.shape[-1], cfg["hidden"], cfg["dropout"], n_out)
     # Cible limitée à +/- 4 pour l'entraînement (quelques semaines extrêmes)
     zt = np.clip(z[:train_weeks], -4, 4).astype(np.float32)
     n_fit = int(round(0.8 * train_weeks))  # arrêt précoce : 20 % les plus récentes
     Xf, zf = torch.from_numpy(Xs[:n_fit]), torch.from_numpy(zt[:n_fit])
     Xv, zv = torch.from_numpy(Xs[n_fit:train_weeks]), torch.from_numpy(zt[n_fit:train_weeks])
-    loss_fn = LOSSES[cfg["loss"]]
+    if cfg["loss"] == "cls":
+        k = cfg["k"]
+        loss_fn = lambda out, target, k=k: cls_loss(out, target, k)  # noqa: E731
+        # Biais de sortie initialisés aux fréquences de base de l'entraînement :
+        # le réseau part du prédicteur « taux de base »
+        zfit = zt[:n_fit]
+        freq = np.array([(zfit < -k).mean(), (np.abs(zfit) <= k).mean(), (zfit > k).mean()])
+        last = model.out if cfg["arch"] == "gru" else model.net[-1]
+        with torch.no_grad():
+            last.bias[:3] = torch.tensor(np.log(freq), dtype=torch.float32)
+            p_big = 1 - freq[1]
+            last.bias[3] = float(np.log(p_big / (1 - p_big)))
+    else:
+        loss_fn = LOSSES[cfg["loss"]]
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.get("lr", 1e-3),
                             weight_decay=cfg["weight_decay"])
     gen = torch.Generator().manual_seed(seed)
@@ -122,8 +154,8 @@ def fit_model(X, z, train_weeks, cfg, seed, max_epochs=150, patience=15, batch_w
         model.train()
         perm = torch.randperm(n_fit, generator=gen)
         train_loss = 0.0
-        for k in range(0, n_fit, batch_weeks):
-            b = perm[k:k + batch_weeks]
+        for start in range(0, n_fit, batch_weeks):
+            b = perm[start:start + batch_weeks]
             opt.zero_grad()
             loss = loss_fn(model(Xf[b]), zf[b])
             loss.backward()
