@@ -125,8 +125,7 @@ la performance.
 Sharpe prévus sont positifs) a-t-elle été décidée avant ou après avoir vu les résultats du test dans
 l'ancien projet ? Si c'est après, il faudra la présenter comme une analyse *post hoc*.
 
-**Encore à confirmer :** les DOI de Joubert (2022) et de Meyer et al. (2023) sur le site du *Journal of
-Financial Data Science*.
+Les DOI de Joubert (2022) et de Meyer et al. (2023) sont maintenant confirmés (journal, section 11).
 
 ## 8. Contenu du paquet
 

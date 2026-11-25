@@ -1206,11 +1206,15 @@ La carte de la littérature, prête pour la section « travaux reliés » du rap
 Chaque étape terminée compare son résultat à la littérature citée.
 
 **Vérifications faites.**
-- **Les 75 références de la bibliographie sont toutes vérifiées.** 40 ont été comparées aux
-  métadonnées officielles de Crossref : titre, auteurs, revue, volume, numéro, pages et DOI. 32 ont été
+- **Les 75 références de la bibliographie sont toutes vérifiées.** 42 ont été comparées aux
+  métadonnées officielles de Crossref : titre, auteurs, revue, volume, numéro, pages et DOI. 30 ont été
   vérifiées sur le site de la revue, de la conférence ou d'un dépôt reconnu (JMLR, NeurIPS, arXiv, NBER,
   CEPR, RePEc), surtout des publications sans DOI Crossref. Les 3 dernières sont des manuels. Les
   volumes, pages et DOI sont maintenant donnés pour chaque référence (section 11).
+- **DOI de Joubert (2022) et de Meyer et al. (2023) confirmés.** Les métadonnées Crossref, déposées par
+  l'éditeur de la revue, concordent sur tous les champs, et les deux DOI renvoient bien aux pages des
+  articles sur le site du *Journal of Financial Data Science* (pm-research.com). Ces pages demandent un
+  abonnement : leur contenu n'a pas pu être lu sans connexion.
 - **Chaque citation du texte figure dans la bibliographie**, et inversement (contrôle automatique).
   Deux références manquaient et ont été ajoutées : Newey et West (1987, 1994), pour l'estimateur de la
   variance utilisé à l'étape 2.
@@ -1223,8 +1227,6 @@ Chaque étape terminée compare son résultat à la littérature citée.
   contribution a été nuancée en conséquence (section 9).
 
 **Restant à faire.**
-- Confirmer le DOI de Joubert (2022) et de Meyer et al. (2023) sur le site du *Journal of Financial
-  Data Science*.
 - Choisir en équipe le style de citation du rapport (auteur-année, comme ici, ou numérique).
 - Décider en équipe de raccourcir ou non la partie financière (Moreira et Muir, Menkhoff et al.).
 
@@ -1468,9 +1470,9 @@ Dans le texte, « ESL » désigne Hastie, Tibshirani et Friedman (2009).
 | Fawcett, T. (2006). An introduction to ROC analysis. *Pattern Recognition Letters*, 27(8), 861–874. doi:10.1016/j.patrec.2005.10.010 | Crossref |
 | Geifman, Y. et El-Yaniv, R. (2017). Selective classification for deep neural networks. *Advances in Neural Information Processing Systems 30*. arXiv:1705.08500 | en ligne |
 | Herbei, R. et Wegkamp, M. H. (2006). Classification with reject option. *Canadian Journal of Statistics*, 34(4), 709–721. doi:10.1002/cjs.5550340410 | en ligne |
-| Joubert, J. F. (2022). Meta-labeling: Theory and framework. *Journal of Financial Data Science*, 4(3), 31–44. | en ligne (DOI à confirmer sur le site de la revue) |
+| Joubert, J. F. (2022). Meta-labeling: Theory and framework. *Journal of Financial Data Science*, 4(3), 31–44. doi:10.3905/jfds.2022.1.098 | Crossref |
 | López de Prado, M. (2018). *Advances in Financial Machine Learning*. Wiley. | manuel |
-| Meyer, M., Barziy, I. et Joubert, J. F. (2023). Meta-labeling: Calibration and position sizing. *Journal of Financial Data Science*, 5(2), 23–40. | en ligne (DOI à confirmer sur le site de la revue) |
+| Meyer, M., Barziy, I. et Joubert, J. F. (2023). Meta-labeling: Calibration and position sizing. *Journal of Financial Data Science*, 5(2), 23–40. doi:10.3905/jfds.2023.1.119 | Crossref |
 | Niculescu-Mizil, A. et Caruana, R. (2005). Predicting good probabilities with supervised learning. *Proceedings of the 22nd International Conference on Machine Learning (ICML)*, 625–632. doi:10.1145/1102351.1102430 | Crossref |
 | Ojala, M. et Garriga, G. C. (2010). Permutation tests for studying classifier performance. *Journal of Machine Learning Research*, 11, 1833–1863. | en ligne |
 
