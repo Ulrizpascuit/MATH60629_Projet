@@ -99,6 +99,20 @@ def cls_loss(out, z, k):
     return direction + magnitude
 
 
+def cond_loss(out, z, k):
+    """Modèle factorisé. out : (B, P, 2) = logit de P(|z| > k) et logit de
+    P(hausse | |z| > k). La tête de direction n'est entraînée que sur les grands
+    mouvements : elle ne peut pas apprendre l'amplitude."""
+    big = z.abs() > k
+    amplitude = nn.functional.binary_cross_entropy_with_logits(out[..., 0], big.float())
+    if big.any():
+        direction = nn.functional.binary_cross_entropy_with_logits(
+            out[..., 1][big], (z[big] > 0).float())
+    else:
+        direction = out.sum() * 0.0
+    return amplitude + direction
+
+
 LOSSES = {"mse": mse_loss, "rank": rank_loss}
 
 
@@ -121,7 +135,7 @@ def fit_model(X, z, train_weeks, cfg, seed, max_epochs=150, patience=15, batch_w
     np.random.seed(seed)
     torch.set_num_threads(1)
     Xs = prepare_inputs(X, train_weeks, cfg)
-    n_out = 4 if cfg["loss"] == "cls" else 1
+    n_out = {"cls": 4, "cond": 2}.get(cfg["loss"], 1)
     if cfg["arch"] == "gru":
         model = GRUNet(Xs.shape[-1], cfg["hidden"], cfg["dropout"], n_out)
     else:
@@ -143,6 +157,17 @@ def fit_model(X, z, train_weeks, cfg, seed, max_epochs=150, patience=15, batch_w
             last.bias[:3] = torch.tensor(np.log(freq), dtype=torch.float32)
             p_big = 1 - freq[1]
             last.bias[3] = float(np.log(p_big / (1 - p_big)))
+    elif cfg["loss"] == "cond":
+        k = cfg["k"]
+        loss_fn = lambda out, target, k=k: cond_loss(out, target, k)  # noqa: E731
+        # Biais initialisés aux fréquences de base : P(grand mouvement), P(hausse | grand)
+        zfit = zt[:n_fit]
+        big = np.abs(zfit) > k
+        p_big, p_up = big.mean(), (zfit[big] > 0).mean()
+        last = model.out if cfg["arch"] == "gru" else model.net[-1]
+        with torch.no_grad():
+            last.bias[0] = float(np.log(p_big / (1 - p_big)))
+            last.bias[1] = float(np.log(p_up / (1 - p_up)))
     else:
         loss_fn = LOSSES[cfg["loss"]]
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.get("lr", 1e-3),
