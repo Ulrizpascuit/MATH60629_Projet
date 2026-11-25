@@ -98,7 +98,6 @@ la performance.
   d'origine reste la réponse principale, et la chaîne mise à jour est présentée comme exploratoire.
 - **Méta-classifieur entraîné sur des jambes de validation optimistes** (MIXT choisi sur ces mêmes
   semaines) — point P2 du journal.
-- **Origine de la stratégie « corrigée »** à vérifier (point P3, voir plus bas).
 - **Courbes risque-couverture :** diagnostic qui classe toutes les jambes de test à la fois, pas une
   règle utilisable en temps réel.
 - **Reproductibilité de la forêt d'une machine à l'autre** : petites différences pour CAD et CHF.
@@ -121,9 +120,9 @@ la performance.
    8 tableaux sont disponibles).
 4. **Langue et ton du rapport** (français, comme le plan d'étude ?).
 
-**À demander à Ulrich (point P3) :** la règle de la stratégie « corrigée » (ne rien faire quand tous les
-Sharpe prévus sont positifs) a-t-elle été décidée avant ou après avoir vu les résultats du test dans
-l'ancien projet ? Si c'est après, il faudra la présenter comme une analyse *post hoc*.
+**Point P3, résolu :** la règle de la stratégie « corrigée » (ne rien faire quand tous les Sharpe prévus
+sont positifs) était déjà dans l'ancien projet et a été décidée avant de voir le test. C'est une variante
+légitime, comptée parmi les 29 essais du Deflated Sharpe.
 
 Les DOI de Joubert (2022) et de Meyer et al. (2023) sont maintenant confirmés (journal, section 11).
 

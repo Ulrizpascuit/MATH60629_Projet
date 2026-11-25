@@ -294,9 +294,12 @@ flowchart LR
 - **(P2) Base d'entraînement du méta-classifieur.** Il est entraîné sur les jambes de validation, qui
   viennent d'un MIXT choisi sur ces mêmes semaines. Ces jambes sont donc légèrement optimistes : c'est le
   biais de sélection décrit par Cawley et Talbot (2010).
-- **(P3) Stratégie « corrigée ».** La règle « ne rien faire si tous les Sharpe prévus sont positifs »
-  (`run_comparison.py`) a été ajoutée après coup. Il faut vérifier si elle a été décidée après avoir vu
-  le test. Si oui, il faut la présenter comme une analyse *post hoc*.
+- **(P3) Stratégie « corrigée » — résolu.** L'ancien projet contient deux versions de la règle, toutes
+  deux présentes dès le départ (`run_comparison.py`, commit 03673d4) : l'« actuelle » ne fait rien quand
+  tous les Sharpe prévus sont négatifs ; la « corrigée » ne fait rien non plus quand ils sont tous
+  positifs. Ulrich a confirmé que la correction a été décidée **avant** de voir les résultats du test,
+  pour une raison de logique : quand toutes les devises sont prévues en hausse, le signal ne donne pas
+  de devise à vendre. La version corrigée est donc une variante légitime. Ce projet ne l'a pas modifiée.
 
 **Registre des résultats de test déjà vus (ancien projet, MATH60610A) :** les tableaux de `outputs/` et
 `outputs/ml/` ont déjà été regardés. Ils sont **la référence**. Toute nouvelle variante est ajoutée au
@@ -325,7 +328,7 @@ flowchart TD
 L'étape 3 dépend des étapes 1 et 2 : le méta-classifieur filtre les jambes produites par le signal final
 (rendement prévu / volatilité prévue).
 
-### Étape 0 — Mise en place et reproduction ◐ (reste : point P3)
+### Étape 0 — Mise en place et reproduction ☑
 - ☑ Environnement Python 3.12 (`uv venv --python 3.12 .venv` puis
   `uv pip install -r requirements.txt`). Versions installées : numpy 2.5.5, pandas 3.1.1,
   scikit-learn 1.9.1, numba 0.68.1.
@@ -333,9 +336,9 @@ L'étape 3 dépend des étapes 1 et 2 : le méta-classifieur filtre les jambes p
   `Code/ml_analysis.py`, puis comparer **chaque** CSV avec la version du dernier commit (8d2bca0).
 - ☑ Figer la façon de reproduire les résultats : `Data/` et `outputs/` remis à l'état du commit,
   versions des paquets figées dans `requirements-lock.txt`, `run_data.py` n'est plus relancé.
-- ◐ Vérifier le point P3 (origine de la stratégie « corrigée »). L'historique git ne remonte qu'à la
-  migration vers Python (4 novembre 2026) : il ne permet pas de dire quand la règle a été décidée. À
-  demander à Ulrich.
+- ☑ Vérifier le point P3 (origine de la stratégie « corrigée »). L'historique git ne remontant qu'à la
+  migration vers Python (4 novembre 2026), la question a été posée à Ulrich : la correction a été décidée
+  avant de voir le test (section 6).
 - ☑ Créer le registre des expériences (section 8) et y inscrire la référence.
 
 **Pourquoi cette étape.** Reproduire d'abord les résultats existants garantit que les écarts mesurés
