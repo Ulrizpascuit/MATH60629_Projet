@@ -467,3 +467,22 @@ This project was first written in R (MATH60610A). The Python version reproduces 
 -   the Random Forest uses scikit-learn with `ranger`'s settings (500 trees, `mtry = 3`, nodes of 5 observations or fewer not split). Its trees cannot be identical to `ranger`'s, so its validation R² and error metrics differ slightly. It is never selected by MIXT.
 
 All backtest tables (performance, meta-classifier decisions, yearly and weekly returns, random-strategy percentiles, corrected strategy) are identical to the R version.
+
+------------------------------------------------------------------------
+
+## Neural-network extension (MATH60629)
+
+The neural-network study reuses the same raw data and the same validation / test split
+(354 / 260 weeks). A single network shared across the five pairs ranks them each week.
+
+``` bash
+python Code/build_panel.py        # 33-feature panel -> Data/Features/panel.npz
+python Code/nn_experiments.py     # 112-config search on validation, final models, ridge, ablations (~35 min on 32 cores)
+python Code/nn_analysis.py        # figures and tables -> latex/figures, latex/tables, outputs/nn
+```
+
+-   `Function/functions_nn.py`: MLP and GRU shared across pairs, MSE loss and a bidirectional
+    listwise ranking loss (ListNet on the best and the worst pair), early stopping, ensembles of seeds.
+-   Results are cached in `Data/Models/nn/` (delete a file to rerun that stage).
+-   The report is in `latex/main.tex` (Overleaf); the previous report on linear models is
+    `latex/ancien_rapport_lineaire.tex`.
