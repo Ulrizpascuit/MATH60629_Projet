@@ -6,6 +6,14 @@ décisions à prendre ensemble. Le détail complet (choix, protocole, résultats
 vérifiées) est dans [`docs/JOURNAL_PROJET.md`](JOURNAL_PROJET.md). Les figures (PDF) et les tableaux
 (LaTeX) prêts pour Overleaf sont dans [`docs/paquet_equipe/`](paquet_equipe/).
 
+> **Version 1, à relire pour la méthode et non pour les résultats.** Le barème ne note pas la
+> performance obtenue : il note la question, la littérature, la conception des expériences et la
+> présentation. En relisant cette V1, concentrez-vous sur la **logique des tests** : chaque test
+> répond-il à la question ? Les choix sont-ils faits sans regarder le test ? Les comparaisons sont-elles
+> équitables ? Les chiffres sont inclus pour que vous ayez tout, mais ils ne sont pas l'objet de la
+> relecture. La section 8 propose une revue critique de la méthode et des pistes pour la rendre plus
+> rigoureuse.
+
 ---
 
 ## 1. Question et approche
@@ -126,7 +134,100 @@ légitime, comptée parmi les 29 essais du Deflated Sharpe.
 
 Les DOI de Joubert (2022) et de Meyer et al. (2023) sont maintenant confirmés (journal, section 11).
 
-## 8. Contenu du paquet
+## 8. Revue critique de la méthode (V1)
+
+Cette revue juge la conception des tests, pas leurs résultats. Elle reprend les critères du barème et
+les conseils du cours : ne pas régler les paramètres en trichant, ne pas comparer injustement, et
+vérifier que tout fonctionne encore quand on retire une partie des données ou qu'on ajoute du bruit.
+
+### 8.1 Ce qui est solide
+
+- **Une seule question, découpée en trois blocs ML évalués chacun avec sa propre métrique**
+  ($R^2_{OS}$, QLIKE, AUC), puis ensemble par ablation. La finance ne sert qu'à l'évaluation finale.
+- **Le protocole :** les choix se font sur la validation, chaque variante n'est évaluée qu'une fois sur
+  le test, et tout est rapporté. Le registre des expériences recense chaque variante essayée.
+- **Les comparaisons sont équitables :** mêmes dates de ré-estimation (la Ridge est réestimée au même
+  rythme que le LSTM, par exemple), et chaque réglage est fait sur la validation.
+- **Les tests multiples sont contrôlés :** Holm sur 40 tests, Deflated Sharpe avec tous les essais du
+  projet, validation emboîtée pour choisir la combinaison.
+- **Des tests témoins :** placebo du filtre, permutation des étiquettes, 1 000 stratégies au hasard.
+- **La reproductibilité :** versions figées, journaux d'exécution, un script par expérience, et des
+  écarts de reproduction expliqués.
+
+### 8.2 Les faiblesses de rigueur, par ordre d'importance
+
+1. **Aucun test qui prouve que le pipeline peut trouver un signal quand il y en a un.** Tous nos
+   résultats sont négatifs. Un lecteur critique peut donc se demander si un bogue ne détruirait pas
+   tout signal. Un résultat négatif n'est convaincant que si l'on montre que la méthode réussit sur un
+   cas où la bonne réponse est connue.
+2. **La puissance statistique n'est pas chiffrée.** Avec 260 semaines de test, quelle est la plus
+   petite amélioration ($R^2_{OS}$, AUC, Sharpe) qu'on aurait pu détecter ? Sans ce chiffre, on ne peut
+   pas distinguer « il n'y a pas de signal » de « le test est trop petit pour le voir ».
+3. **La robustesse n'est pas testée.** La liste de contrôle du journal (section 12) la prévoit
+   (sous-périodes, sensibilité aux choix fixés *a priori*), mais elle n'a pas été faite. C'est
+   exactement le type de test que le prof demande en plus.
+4. **Le test n'est pas vierge.** L'ancien projet l'avait déjà regardé. Nous l'avons signalé et traité
+   (chaîne d'origine comme réponse principale, chaîne mise à jour comme exploratoire), mais il n'existe
+   aucune période ni aucune devise jamais vue.
+5. **Le pré-enregistrement ne peut pas être prouvé.** Les règles ont été écrites avant les calculs,
+   mais elles ont été commitées en même temps que les résultats (commit 902c24c). L'historique git ne
+   permet donc pas de le démontrer.
+6. **L'ablation est un escalier dans un ordre fixe** (ML, puis volatilité, puis filtre). On ne sait
+   pas ce que vaut le filtre sans la volatilité, ni la volatilité sans la prévision ML : les
+   interactions entre les blocs ne sont pas mesurées.
+7. **Le méta-classifieur est en partie circulaire.** Ses trois variables viennent toutes du signal
+   lui-même. Il ne peut donc que reclasser les jambes selon la force du signal, ce qui explique en partie
+   que $|\hat s|$ seul fasse aussi bien. De plus, il est entraîné sur des jambes de validation
+   optimistes (point P2).
+8. **Des incohérences entre le texte et ce qui a été calculé :**
+   - le *Model Confidence Set* est présenté dans le journal, mais n'a pas été appliqué ;
+   - en change, la référence classique est la marche aléatoire, soit une prévision nulle (Meese et
+     Rogoff, 1983), alors que notre $R^2_{OS}$ est mesuré contre la moyenne historique ;
+   - le test de Clark-West est conçu pour des modèles emboîtés, alors que la forêt et MIXT ne sont pas
+     des extensions linéaires de la moyenne historique.
+9. **Des choix fixés sans analyse de sensibilité :** blocs de 8 semaines pour le bootstrap, seuil de
+   0,5 pour le filtre, 60 % d'entraînement initial. Le Deflated Sharpe traite aussi les 29 essais comme
+   indépendants, alors qu'ils sont très corrélés.
+10. **Aucun test unitaire du code.** Les fonctions statistiques (Clark-West, Deflated Sharpe, bootstrap,
+    plis avec tampon) ne sont vérifiées que par des `assert` ponctuels.
+
+### 8.3 Pistes d'amélioration réalistes, classées par priorité
+
+Toutes ces pistes respectent le protocole : elles ne modifient aucun choix et ne servent qu'à vérifier
+la méthode. Pour chacune, les règles seraient **commitées avant le calcul**, ce qui règle la faiblesse 5
+pour la suite. Chaque nouvel essai sur le test serait ajouté au registre et compté dans le Deflated
+Sharpe.
+
+**Priorité 1 : peu coûteux, gain de rigueur important.**
+
+| Piste | Ce qu'elle démontre | Faiblesse traitée |
+|---|---|---|
+| **Signal planté :** remplacer la cible par des données simulées contenant un signal connu, et vérifier que les 3 blocs le retrouvent | que le pipeline fonctionne et peut détecter un vrai signal | 1 |
+| **Cible permutée :** mélanger la cible du bloc 1 et vérifier que le $R^2_{OS}$ tombe sous zéro | l'absence de fuite d'information | 1 |
+| **Effet minimal détectable** pour le $R^2_{OS}$, l'AUC et le Sharpe avec 260 semaines | la portée exacte du résultat négatif | 2 |
+| **Robustesse :** test coupé en deux sous-périodes ; entraînement initial de 50 %, 60 % ou 70 % ; blocs bootstrap de 4, 8 ou 16 semaines ; seuils de 0,45 à 0,55 | que les conclusions ne tiennent pas à un choix arbitraire | 3, 9 |
+| **Tests unitaires** (`pytest`) des fonctions statistiques, comparées à des valeurs de référence | que le code calcule ce qu'il prétend calculer | 10 |
+| **Mettre le texte en accord avec le code :** appliquer le MCS (ou le retirer du texte), ajouter la marche aléatoire comme seconde référence, et signaler la limite de Clark-West | la cohérence entre la méthode décrite et la méthode calculée | 8 |
+
+**Priorité 2 : coût moyen.**
+
+| Piste | Ce qu'elle démontre | Faiblesse traitée |
+|---|---|---|
+| **Ablation factorielle :** les 8 combinaisons des 3 blocs (avec ou sans chacun) | l'apport propre de chaque bloc et leurs interactions | 6 |
+| **Validation coupée en deux :** MIXT choisi sur la première moitié, filtre entraîné sur la seconde | l'ampleur du biais P2 | 7 |
+| **Deflated Sharpe avec un nombre effectif d'essais** (essais regroupés selon leur corrélation), en plus de N = 29 | la sensibilité de la correction au compte des essais | 9 |
+
+**Priorité 3 : facultatif, à présenter comme exploratoire ou comme travaux futurs.**
+
+- Ajouter au méta-classifieur des variables indépendantes du signal (régime de volatilité du marché,
+  écarts de taux), choisies sur la validation (faiblesse 7).
+- Une évaluation sur des devises jamais vues (AUD, NZD, SEK, NOK), seul vrai test vierge possible, si
+  les données de taux existent (faiblesse 4).
+- Une sensibilité aux coûts de transaction, en points de base par jambe.
+
+---
+
+## 9. Contenu du paquet
 
 | Fichier | Contenu |
 |---|---|
