@@ -1,0 +1,19 @@
+\begin{table}[ht]
+\centering
+\small
+\caption{Ablation de bout en bout sur le test (260 semaines). DSR avec $N = 29$ essais.}
+\label{tab:ablation}
+\begin{tabular}{lrrrrr}
+\toprule
+Variante & Sharpe & IC à 95 \% & Placebo $p$ & DSR & Sharpe sans financement \\
+\midrule
+A0 Naïf & 0,15 & [$-$0,76 ; 1,02] & -- & 0,19 & -- \\
+A1 origine ($\hat r$ MIXT) & 0,54 & [$-$0,43 ; 1,51] & -- & 0,50 & -- \\
+A2 origine ($\hat r$/$\hat\sigma$ GARCH) & 0,45 & [$-$0,41 ; 1,36] & -- & 0,42 & -- \\
+A3 origine (+ méta) & 0,88 & [0,09 ; 1,83] & 0,117 & 0,77 & 0,73 \\
+A1 mise à jour ($\hat r$ Moyenne) & 0,57 & [$-$0,34 ; 1,57] & -- & 0,53 & -- \\
+A2 mise à jour ($\hat r$/$\hat\sigma$ HAR) & 0,52 & [$-$0,37 ; 1,50] & -- & 0,48 & -- \\
+A3 mise à jour (+ méta) & 0,74 & [$-$0,08 ; 1,58] & 0,484 & 0,67 & 0,54 \\
+\bottomrule
+\end{tabular}
+\end{table}

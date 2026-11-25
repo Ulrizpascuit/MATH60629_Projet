@@ -1,0 +1,4 @@
+Schéma de CV,$R^2$ validation (\%),$R^2_{OS}$ test (\%)
+Plis aléatoires (retenu),"0,55","$-$0,49"
+Blocs + tampon 26 sem.,"0,50","$-$1,12"
+Forward-chaining + tampon 26 sem.,"$-$0,03","0,20"

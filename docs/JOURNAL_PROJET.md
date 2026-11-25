@@ -211,6 +211,7 @@ flowchart TD
 | Bloc 3 + stratégie | `Code/backtest.py` | `meta_expanding_filtered_returns`, `strategy_returns` | `outputs/*.csv`, `outputs/*.png` |
 | Analyses ML existantes | `Code/ml_analysis.py` | R² hors échantillon, Clark-West, corrélation de rang, AUC, calibration | `outputs/ml/*.csv` (+ `latex/`, absent localement) |
 | Figures du journal | `docs/figures/make_journal_figures.py` | — | `docs/figures/*.png` + `*.pdf` |
+| Paquet pour l'équipe | `Code/experiments/e7_paquet_equipe.py` | — | `docs/paquet_equipe/` |
 | Nouvelles expériences | `Code/experiments/<id>_*.py` | une par ligne du registre (section 8) | `experiments/<ID>/` (modèles `.pkl` non versionnés) |
 
 ---
@@ -1008,15 +1009,15 @@ qui n'utilise pas le test, mène à la même conclusion que l'étape 1.
 
 | Variante | Sharpe | IC à 95 % | Rang parmi 1 000 au hasard | DSR |
 |---|---|---|---|---|
-| A0 Naïf | 0,15 | [−0,77 ; 1,02] | 65 % | 0,19 |
+| A0 Naïf | 0,15 | [−0,76 ; 1,02] | 65 % | 0,19 |
 | **Chaîne d'origine** | | | | |
 | A1 + prévision MIXT ($\hat r$ seul) | 0,54 | [−0,43 ; 1,51] | 87 % | 0,50 |
 | A2 + volatilité GARCH ($\hat r/\hat\sigma$) | 0,45 | [−0,41 ; 1,36] | 83 % | 0,42 |
 | A3 + méta-classifieur | **0,88** | **[0,09 ; 1,83]** | 97 % | 0,77 |
 | A3 placebo (même nombre de jambes) | 0,48 en moyenne | [−0,19 ; 1,14] | — | — |
 | **Chaîne mise à jour (exploratoire)** | | | | |
-| A1 + moyenne simple ($\hat r$ seul) | 0,58 | [−0,34 ; 1,57] | 91 % | 0,53 |
-| A2 + volatilité HAR | 0,52 | [−0,37 ; 1,51] | 88 % | 0,48 |
+| A1 + moyenne simple ($\hat r$ seul) | 0,57 | [−0,34 ; 1,57] | 91 % | 0,53 |
+| A2 + volatilité HAR | 0,52 | [−0,37 ; 1,50] | 88 % | 0,48 |
 | A3 + méta-classifieur | 0,74 | [−0,08 ; 1,58] | 96 % | 0,67 |
 | A3 placebo (même nombre de jambes) | 0,72 en moyenne | [0,17 ; 1,28] | — | — |
 
@@ -1031,11 +1032,11 @@ essais ont des Sharpe proches de la moyenne et réduisent la dispersion entre es
 `essais_pour_dsr.csv`).*
 
 **Ce que chaque bloc apporte.**
-- **Bloc 1, la prévision ML (A0 → A1) :** le Sharpe passe de 0,15 à 0,54 (origine) ou 0,58 (mise à
+- **Bloc 1, la prévision ML (A0 → A1) :** le Sharpe passe de 0,15 à 0,54 (origine) ou 0,57 (mise à
   jour). C'est le plus grand pas de l'escalier, mais les intervalles de confiance de A0 et de A1 se
   recouvrent presque entièrement.
 - **Bloc 2, la volatilité (A1 → A2) :** le Sharpe *baisse* dans les deux chaînes, de 0,54 à 0,45 et de
-  0,58 à 0,52. Cela confirme 2.2 : diviser par la volatilité prévue n'aide pas à classer les devises.
+  0,57 à 0,52. Cela confirme 2.2 : diviser par la volatilité prévue n'aide pas à classer les devises.
 - **Bloc 3, le méta-classifieur (A2 → A3) :** le Sharpe monte, de 0,45 à 0,88 (origine) et de 0,52 à
   0,74 (mise à jour). Mais le placebo l'explique en bonne partie :
   - **chaîne d'origine :** 12 % des filtres au hasard font au moins aussi bien (p = 0,117, comme en 3.2) ;
@@ -1227,10 +1228,21 @@ Chaque étape terminée compare son résultat à la littérature citée.
 - Choisir en équipe le style de citation du rapport (auteur-année, comme ici, ou numérique).
 - Décider en équipe de raccourcir ou non la partie financière (Moreira et Muir, Menkhoff et al.).
 
-### Étape 7 — Paquet de résultats pour l'équipe ☐
-- les tableaux et figures finales, en PNG et PDF ;
-- ce journal, avec les résultats remplis ;
-- la liste des limites et des travaux futurs.
+### Étape 7 — Paquet de résultats pour l'équipe ☑
+- **[`docs/SYNTHESE_POUR_EQUIPE.md`](SYNTHESE_POUR_EQUIPE.md)** : en quelques pages, la question, le
+  protocole, le résultat clé de chaque bloc, la réponse à la question, les limites, les pistes futures et
+  les décisions à prendre en équipe. Ce n'est pas le texte du rapport.
+- **`docs/paquet_equipe/figures/`** : 21 figures numérotées dans l'ordre logique (PDF, pour Overleaf),
+  dont deux nouveaux schémas, le pipeline et le protocole (PDF et PNG).
+- **`docs/paquet_equipe/tableaux/`** : 8 tableaux principaux en `.tex` (booktabs, virgule décimale) et en
+  `.csv`. Ils sont générés à partir des résultats des expériences ; aucun chiffre n'est recopié à la
+  main.
+- Tout est régénéré par `Code/experiments/e7_paquet_equipe.py`.
+- **Contrôle :** les chiffres de la synthèse ont été comparés aux fichiers de résultats. Ce contrôle a
+  fait corriger trois arrondis dans l'étape 4 de ce journal : le Sharpe A1 de la chaîne mise à jour vaut
+  0,57 (et non 0,58), et deux bornes d'intervalle, −0,76 et 1,50.
+- **Non vérifié :** les tableaux `.tex` n'ont pas été compilés ici, puisqu'aucune installation LaTeX
+  n'est disponible sur la machine. À tester dans Overleaf.
 
 ---
 
@@ -1252,6 +1264,7 @@ Chaque variante est inscrite **avant** d'être évaluée sur le test.
 | E3 | 3 | Méta-classifieur de la stratégie actuelle : AUC et calibration, placebo (10 000), permutation des étiquettes (1 000), risque-couverture, seuils sur la validation | — (τ fixé *a priori*) | oui, une fois | placebo p = 0,118 ; AUC p = 0,136 (achats), 0,065 (ventes) ; $|\hat s|$ aussi bon que $\hat p$ | `experiments/E3_meta/` |
 | E4 | 4 | Ablation A0 → A3 pour la chaîne d'origine (principale) et la chaîne mise à jour (moyenne + HAR, exploratoire) ; placebos, IC à 95 %, DSR (N = 29), rendements par année, part du financement | oui : moyenne choisie par validation emboîtée | oui, une fois | A3 origine 0,88 (IC [0,09 ; 1,83], placebo p = 0,117, DSR 0,77) ; A3 mise à jour 0,74 (placebo p = 0,48) | `experiments/E4_ablation/` |
 | E5 | 5 | LSTM à 5 sorties (grille 2 × 2, 5 graines, réestimé toutes les 52 sem.) contre Ridge de même fréquence | oui : 32 unités, L = 4 | oui, une fois | R²_OS test : LSTM −0,43 %, Ridge −1,10 % ; IC de rang du LSTM ≈ 0 ; Sharpe A1 : LSTM 0,34, Ridge 0,36 (essais n° 28 et 29) | `experiments/E5_lstm/` |
+| E7 | 7 | Paquet pour l'équipe : synthèse, 21 figures, 8 tableaux LaTeX | — | — (aucun calcul nouveau) | — | `docs/SYNTHESE_POUR_EQUIPE.md`, `docs/paquet_equipe/` |
 | E0 | 0 | Référence recalculée sur le Mac de l'étude (données figées, Python 3.12, versions de `requirements-lock.txt`) : base de comparaison de toutes les variantes | — | recalcul de la référence, pas une nouvelle variante | identique au commit sauf la forêt pour CAD et CHF (étape 0) | `experiments/E0_reference_mac/`, script `Code/experiments/e0_reference_mac.py` |
 
 ---

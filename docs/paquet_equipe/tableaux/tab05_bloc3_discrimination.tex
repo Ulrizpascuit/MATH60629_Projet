@@ -1,0 +1,14 @@
+\begin{table}[ht]
+\centering
+\small
+\caption{Méta-classifieur sur le test. Placebo : Sharpe 0,88 contre 0,48 en moyenne pour 10~000 filtres au hasard, $p = 0,118$.}
+\label{tab:meta}
+\begin{tabular}{lrrrrrr}
+\toprule
+Côté & Jambes & AUC & $p$ (permutation) & Brier & Brier de référence & Gain gardées / rejetées (\%) \\
+\midrule
+Achats & 196 & 0,531 & 0,136 & 0,2499 & 0,2487 & 50,0 / 44,1 \\
+Ventes & 196 & 0,550 & 0,065 & 0,2470 & 0,2491 & 54,1 / 50,0 \\
+\bottomrule
+\end{tabular}
+\end{table}

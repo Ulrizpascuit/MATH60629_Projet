@@ -1,0 +1,5 @@
+Modèle,QLIKE validation,QLIKE test,RMSE test (pts de \%),Corrélation test
+"GARCH(1,1)","0,561","0,415","0,51","0,32"
+HAR (log) (retenu),"0,543","0,401","0,47","0,39"
+VR semaine passée,"1,170","1,274","0,60","0,29"
+Écart-type 12 sem.,"0,723","0,553","0,52","0,26"

@@ -1,0 +1,14 @@
+\begin{table}[ht]
+\centering
+\small
+\caption{LSTM contre Ridge réestimée aux mêmes dates.}
+\label{tab:lstm}
+\begin{tabular}{lrrr}
+\toprule
+Modèle (réestimé toutes les 52 sem.) & $R^2_{OS}$ test (\%) & IC de rang (test) & Sharpe A1 [IC 95 \%] \\
+\midrule
+LSTM à 5 sorties (5 graines) & $-$0,43 & $-$0,008 & 0,34 [$-$0,64 ; 1,20] \\
+Ridge & $-$1,10 & 0,012 & 0,36 [$-$0,53 ; 1,28] \\
+\bottomrule
+\end{tabular}
+\end{table}
